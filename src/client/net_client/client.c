@@ -26,7 +26,7 @@ static void run_main_loop_without_blocking(ProtobufCRPCDispatch *dispatch) {
     protobuf_c_rpc_dispatch_run(dispatch);
 }
 
-ProtobufCService *my_connect(char * address) {
+ProtobufCService *my_connect(char *address) {
     ProtobufC_RPC_Client *client;
     ProtobufCService *service;
     service = protobuf_c_rpc_client_new(PROTOBUF_C_RPC_ADDRESS_TCP, address, &rpc__database__descriptor,
@@ -67,6 +67,22 @@ void send__create_request(ProtobufCService *service, CreateFileNodeRequest creat
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
 
+void send__create_root_node(ProtobufCService *service) {
+    CreateFileNodeRequest root_node = {
+            .parent_id = {
+                    .page_id = -1,
+                    .item_id = -1
+            },
+            .file_info = {
+                    .name = "root",
+                    .owner = "root",
+                    .access_time = 123456789,
+                    .mime_type = "text/plain"
+            }
+    };
+    send__create_request(service, root_node);
+}
+
 int main(int argc, char **argv) {
     char *address = "127.0.0.1:9090";
     ProtobufCService *service = my_connect(address);
@@ -74,41 +90,22 @@ int main(int argc, char **argv) {
     for (;;) {
         // hardcoded sample data
         CreateFileNodeRequest data = {
-            .parent_id = {
-                .page_id = 1,
-                .item_id = 2
-            },
-            .file_info = {
-                .name = "test.txt",
-                .owner = "test",
-                .access_time = 123456789,
-                .mime_type = "text/plain"
-            }
-        };
-
-        // hardcoded root note parent_id = {-1, -1}
-        CreateFileNodeRequest root_node = {
-            .parent_id = {
-                .page_id = -1,
-                .item_id = -1
-            },
-            .file_info = {
-                .name = "root",
-                .owner = "root",
-                .access_time = 123456789,
-                .mime_type = "text/plain"
-            }
+                .parent_id = {
+                        .page_id = 0,
+                        .item_id = 0
+                },
+                .file_info = {
+                        .name = "test.txt",
+                        .owner = "test",
+                        .access_time = 123456789,
+                        .mime_type = "text/plain"
+                }
         };
 
         run_main_loop_without_blocking(protobuf_c_rpc_dispatch_default());
 
-        // send root node
-        send__create_request(service, root_node);
-        printf("root node sent\n");
-        // sleep 3 seconds
-//        sleep(5);
-//        send__create_request(service, data);
-//        printf("data sent\n");
+        send__create_request(service, data);
+        printf("data sent\n");
         // sleep 3 seconds
         sleep(3);
     }
