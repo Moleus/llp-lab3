@@ -122,7 +122,12 @@ int main() {
 
     ProtobufCService *service = (ProtobufCService *) &databaseService;
 
-    protobuf_c_rpc_server_new(address_type, listen_port, service, NULL);
+    // TODO: fix address already in use
+    ProtobufC_RPC_Server *pServer = protobuf_c_rpc_server_new(address_type, listen_port, service, NULL);
+    if (pServer == NULL) {
+        fprintf(stderr, "Error creating server!\n");
+        exit(1);
+    }
 
     // Run the server loop
     for (;;) {

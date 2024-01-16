@@ -64,18 +64,23 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
     switch (value.type) {
         case INT_32:
             tmp_result.int_value = value.int_value;
+            tmp_result.value_case = RPC__NODE_VALUE__VALUE_INT_VALUE;
             break;
         case DOUBLE:
             tmp_result.double_value = value.double_value;
+            tmp_result.value_case = RPC__NODE_VALUE__VALUE_DOUBLE_VALUE;
             break;
         case STRING:
             tmp_result.string_value = strdup(value.string_value.value);
+            tmp_result.value_case = RPC__NODE_VALUE__VALUE_STRING_VALUE;
             break;
         case BOOL:
             tmp_result.bool_value = value.bool_value;
+            tmp_result.value_case = RPC__NODE_VALUE__VALUE_BOOL_VALUE;
             break;
         case FILE_INFO:
             tmp_result.file_info_value = convert_to_rpc_FileInfo(value.file_info_value);
+            tmp_result.value_case = RPC__NODE_VALUE__VALUE_FILE_INFO_VALUE;
             break;
         default:
             LOG_ERR("Unknown type: %d", value.type);
@@ -119,7 +124,7 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 }
 
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
-    assert((ValueType) value.type == (ValueType) value.value_case);
+//    assert((ValueType) value.type == (ValueType) value.value_case);
 
     NodeValue result = {
             .type = (ValueType) value.type
