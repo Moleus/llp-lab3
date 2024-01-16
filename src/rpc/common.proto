@@ -1,5 +1,28 @@
 syntax = "proto3";
 
+/*
+
+typedef enum __attribute__((packed)) {
+    INT_32,
+    DOUBLE,
+    STRING,
+    BOOL,
+    FILE_INFO
+} ValueType;
+
+typedef struct __attribute__((packed)) {
+    ValueType type;
+    union __attribute__((packed)) {
+        int32_t int_value;
+        double double_value;
+        String string_value;
+        bool bool_value;
+        FileInfo file_info_value;
+    };
+} NodeValue;
+
+ */
+
 package Rpc;
 
 message FileInfo {
@@ -14,6 +37,45 @@ message NodeId {
   uint32 item_id = 2;
 }
 
+message NodeValue {
+  enum Type {
+    INT_32 = 0;
+    DOUBLE = 1;
+    STRING = 2;
+    BOOL = 3;
+    FILE_INFO = 4;
+  }
+
+  Type type = 1;
+  oneof value {
+    int32 int_value = 2;
+    double double_value = 3;
+    string string_value = 4;
+    bool bool_value = 5;
+    FileInfo file_info_value = 6;
+  }
+}
+
+message Node {
+  NodeId id = 1;
+  NodeId parent_id = 2;
+  NodeValue value = 3;
+}
+
+message CreateNodeRequest {
+  NodeValue value = 1;
+  NodeId parent_id = 2;
+}
+
+message UpdateNodeRequest {
+  NodeId id = 1;
+  NodeValue value = 2;
+}
+
+message DeleteNodeRequest {
+  NodeId id = 1;
+}
+
 message CreateFileNodeRequest {
   FileInfo file_info = 1;
   NodeId parent_id = 2;
@@ -25,4 +87,8 @@ message CreateFileNodeResponse {
 
 service Database {
   rpc CreateFileNode(CreateFileNodeRequest) returns (CreateFileNodeResponse);
+  rpc CreateNode(CreateNodeRequest) returns (NodeId);
+  rpc UpdateNode(UpdateNodeRequest) returns (Node);
+  rpc DeleteNode(DeleteNodeRequest) returns (Node);
+  rpc GetNode(NodeId) returns (Node);
 }

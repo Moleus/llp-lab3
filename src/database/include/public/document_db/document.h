@@ -11,11 +11,6 @@ typedef struct {
 } Document;
 
 typedef struct {
-    NodeValue value;
-    node_id_t parent;
-} CreateNodeRequest;
-
-typedef struct {
     Node *node;
     NodeValue new_value;
 } UpdateNodeRequest;

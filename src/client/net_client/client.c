@@ -3,7 +3,7 @@
 #include <string.h>
 #include <protobuf-c-rpc/protobuf-c-rpc.h>
 #include <unistd.h>
-#include "common.h"
+#include "converters.h"
 #include "public/util/common.h"
 #include "client.h"
 
@@ -56,7 +56,7 @@ static void handle_create_response(const Rpc__CreateFileNodeResponse *response, 
     if (response == NULL) {
         printf("Error processing request.\n");
     } else {
-        node_id_t node_id = convert_node_id_from_rpc(response->node_id);
+        node_id_t node_id = convert_from_rpc_nodeId(response->node_id);
         printf("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
     }
     *(protobuf_c_boolean *) closure_data = 1;

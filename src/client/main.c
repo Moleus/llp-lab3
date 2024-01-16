@@ -4,7 +4,6 @@
 #include "parser/types.h"
 #include "parser/my_parser.h"
 
-
 unsigned char log_level = DEBUG;
 
 // read from input using parser
@@ -12,7 +11,7 @@ unsigned char log_level = DEBUG;
 int main(int argc, char **argv) {
     char *address = "127.0.0.1:9090";
 
-    char *command = "a/b/d\n";
+    char *command = "a/b/d[@x=1][@y=2][@z=hello]\n";
     parser_parse_command(command);
     return 0;
 

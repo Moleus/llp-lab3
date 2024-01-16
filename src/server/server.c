@@ -1,7 +1,7 @@
 #include <protobuf-c-rpc/protobuf-c-rpc.h>
 #include <malloc.h>
 #include "common.pb-c.h"
-#include "common.h"
+#include "converters.h"
 #include <signal.h>
 #include "public/util/common.h"
 #include "public/document_db/document.h"
@@ -15,7 +15,7 @@ void handle_create_node_request(const Rpc__CreateFileNodeRequest *request, Rpc__
     ASSERT_ARG_NOT_NULL(request->parent_id)
     ASSERT_ARG_NOT_NULL(request->file_info)
 
-    CreateFileNodeRequest node_request = convert_from_rpc(*request);
+    CreateFileNodeRequest node_request = convert_from_rpc_CreateFileNodeRequest(*request);
 
     // print all info about CreateFileNodeRequest:
     printf("parent_id: (%d/%d)\n", node_request.parent_id.page_id, node_request.parent_id.item_id);
@@ -48,6 +48,20 @@ void prefix__create_file_node(Rpc__Database_Service *service, const Rpc__CreateF
     printf("backend__create_file_node\n");
     Rpc__CreateFileNodeResponse response = RPC__CREATE_FILE_NODE_RESPONSE__INIT;
     handle_create_node_request(input, &response);
+    closure(&response, closure_data);
+}
+
+void prefix__create_node(Rpc__Database_Service *service, const Rpc__CreateNodeRequest *input, Rpc__NodeId_Closure closure, void *closure_data) {
+    (void) service;
+    printf("backend__create_node\n");
+    Node *result = malloc(sizeof(Node));
+    CreateNodeRequest create_node_request = convert_from_rpc_CreateFileNodeRequest()
+    Result res = document_add_node(g_document, input, result);
+    if (res.status != RES_OK) {
+        LOG_ERR("failed to add node: %s", res.message);
+        exit(1);
+    }
+    response.node_id = convert_node_id_to_rpc(result->id);
     closure(&response, closure_data);
 }
 

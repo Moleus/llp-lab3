@@ -1,27 +1,8 @@
 #pragma once
 
 #include "public/util/common.h"
-#include "../../../../rpc/common.h"
+#include "../../../../rpc/converters.h"
 #include <stdint.h>
-
-typedef enum __attribute__((packed)) {
-    INT_32,
-    DOUBLE,
-    STRING,
-    BOOL,
-    FILE_INFO
-} ValueType;
-
-typedef struct __attribute__((packed)) {
-    ValueType type;
-    union __attribute__((packed)) {
-        int32_t int_value;
-        double double_value;
-        String string_value;
-        bool bool_value;
-        FileInfo file_info_value;
-    };
-} NodeValue;
 
 
 static const node_id_t ROOT_NODE_ID = {0, 0};
