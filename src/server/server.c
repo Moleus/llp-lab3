@@ -6,17 +6,23 @@
 
 // Implement server logic here
 void handle_create_node_request(const Rpc__CreateFileNodeRequest *request, Rpc__CreateFileNodeResponse *response) {
-    Rpc__NodeId *rpcNodeId = malloc(sizeof(Rpc__NodeId));
-    // hardcode data
+    CreateFileNodeRequest node_request = convert_from_rpc(*request);
+
+    // print all info about CreateFileNodeRequest:
+    printf("parent_id: (%d/%d)\n", node_request.parent_id.page_id, node_request.parent_id.item_id);
+    printf("file_info: {\n");
+    printf("\tname: %s\n", node_request.file_info.name);
+    printf("\towner: %s\n", node_request.file_info.owner);
+    printf("\taccess_time: %lu\n", node_request.file_info.access_time);
+    printf("\tmime_type: %s\n", node_request.file_info.mime_type);
+    printf("}\n");
+
+    // response is parend_id + 1
     node_id_t node_id = {
-        .page_id = 1,
-        .item_id = 2
+        .page_id = node_request.parent_id.page_id + 1,
+        .item_id = node_request.parent_id.item_id + 1
     };
-
-    printf("Sending node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
-
-    *rpcNodeId = convert_node_id_to_rpc(node_id);
-    response->node_id = rpcNodeId;
+    response->node_id = convert_node_id_to_rpc(node_id);
 }
 
 void prefix__create_file_node(Rpc__Database_Service *service, const Rpc__CreateFileNodeRequest *input, Rpc__CreateFileNodeResponse_Closure closure, void *closure_data) {

@@ -11,10 +11,12 @@ node_id_t convert_node_id_from_rpc(Rpc__NodeId *node_id) {
     return result;
 }
 
-Rpc__NodeId convert_node_id_to_rpc(node_id_t node_id) {
-    Rpc__NodeId result = RPC__NODE_ID__INIT;
-    result.page_id = (uint32_t) node_id.page_id;
-    result.item_id = (uint32_t) node_id.item_id;
+Rpc__NodeId *convert_node_id_to_rpc(node_id_t node_id) {
+    Rpc__NodeId *result = malloc(sizeof(Rpc__NodeId));
+    Rpc__NodeId tmp_result = RPC__NODE_ID__INIT;
+    tmp_result.page_id = (uint32_t) node_id.page_id;
+    tmp_result.item_id = (uint32_t) node_id.item_id;
+    *result = tmp_result;
     return result;
 }
 
@@ -29,9 +31,7 @@ CreateFileNodeRequest convert_from_rpc(Rpc__CreateFileNodeRequest request) {
 }
 
 Rpc__CreateFileNodeRequest *convert_to_rpc(CreateFileNodeRequest request) {
-    Rpc__NodeId *parent_id = malloc(sizeof(Rpc__NodeId));
-    Rpc__NodeId tmp_parent_id = convert_node_id_to_rpc(request.parent_id);
-    *parent_id = tmp_parent_id;
+    Rpc__NodeId *parent_id = convert_node_id_to_rpc(request.parent_id);
 
     Rpc__FileInfo *file_info = malloc(sizeof(Rpc__FileInfo));
     Rpc__FileInfo tmp_file_info = convert_file_info_to_rpc(request.file_info);
