@@ -28,17 +28,30 @@ CreateFileNodeRequest convert_from_rpc(Rpc__CreateFileNodeRequest request) {
     return createFileNodeRequest;
 }
 
-Rpc__CreateFileNodeRequest convert_to_rpc(CreateFileNodeRequest request) {
-    Rpc__CreateFileNodeRequest createFileNodeRequest = RPC__CREATE_FILE_NODE_REQUEST__INIT;
-    Rpc__NodeId parent_id = RPC__NODE_ID__INIT;
-    parent_id.page_id = (uint32_t) request.parent_id.page_id;
-    parent_id.item_id = (uint32_t) request.parent_id.item_id;
-    createFileNodeRequest.parent_id = &parent_id;
-    Rpc__FileInfo file_info = RPC__FILE_INFO__INIT;
-    file_info.name = request.file_info.name;
-    file_info.owner = request.file_info.owner;
-    file_info.access_time = request.file_info.access_time;
-    file_info.mime_type = request.file_info.mime_type;
-    createFileNodeRequest.file_info = &file_info;
+Rpc__CreateFileNodeRequest *convert_to_rpc(CreateFileNodeRequest request) {
+    Rpc__NodeId *parent_id = malloc(sizeof(Rpc__NodeId));
+    Rpc__NodeId tmp_parent_id = convert_node_id_to_rpc(request.parent_id);
+    *parent_id = tmp_parent_id;
+
+    Rpc__FileInfo *file_info = malloc(sizeof(Rpc__FileInfo));
+    Rpc__FileInfo tmp_file_info = convert_file_info_to_rpc(request.file_info);
+    *file_info = tmp_file_info;
+
+    Rpc__CreateFileNodeRequest *createFileNodeRequest = malloc(sizeof(Rpc__CreateFileNodeRequest));
+    Rpc__CreateFileNodeRequest tmp_createFileNodeRequest = RPC__CREATE_FILE_NODE_REQUEST__INIT;
+    createFileNodeRequest->parent_id = parent_id;
+    createFileNodeRequest->file_info = file_info;
+    *createFileNodeRequest = tmp_createFileNodeRequest;
+
     return createFileNodeRequest;
+}
+
+
+Rpc__FileInfo convert_file_info_to_rpc(FileInfo file_info) {
+    Rpc__FileInfo result = RPC__FILE_INFO__INIT;
+    result.name = file_info.name;
+    result.owner = file_info.owner;
+    result.access_time = file_info.access_time;
+    result.mime_type = file_info.mime_type;
+    return result;
 }

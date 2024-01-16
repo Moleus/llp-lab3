@@ -26,8 +26,10 @@ typedef struct CreateFileNodeRequest {
 
 CreateFileNodeRequest convert_from_rpc(Rpc__CreateFileNodeRequest request);
 
-Rpc__CreateFileNodeRequest convert_to_rpc(CreateFileNodeRequest request);
+Rpc__CreateFileNodeRequest *convert_to_rpc(CreateFileNodeRequest request);
 
 node_id_t convert_node_id_from_rpc(Rpc__NodeId *node_id);
 
 Rpc__NodeId convert_node_id_to_rpc(node_id_t node_id);
+
+Rpc__FileInfo convert_file_info_to_rpc(FileInfo file_info);
