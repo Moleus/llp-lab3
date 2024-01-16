@@ -8,11 +8,19 @@ typedef struct __attribute__((packed)) {
     uint32_t length;
 } String;
 
+typedef struct __attribute((packed)) {
+    String name;
+    String owner;
+    uint64_t atime;
+    String mime_type;
+} FileInfo;
+
 typedef enum __attribute__((packed)) {
     INT_32,
     DOUBLE,
     STRING,
-    BOOL
+    BOOL,
+    FILE_INFO
 } ValueType;
 
 typedef struct __attribute__((packed)) {
@@ -22,6 +30,7 @@ typedef struct __attribute__((packed)) {
         double double_value;
         String string_value;
         bool bool_value;
+        FileInfo file_info_value;
     };
 } NodeValue;
 
