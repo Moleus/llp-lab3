@@ -3,9 +3,15 @@
 #include "common.pb-c.h"
 #include "common.h"
 #include <signal.h>
+#include "public/util/common.h"
 
 // Implement server logic here
 void handle_create_node_request(const Rpc__CreateFileNodeRequest *request, Rpc__CreateFileNodeResponse *response) {
+    ASSERT_ARG_NOT_NULL(request)
+    ASSERT_ARG_NOT_NULL(response)
+    ASSERT_ARG_NOT_NULL(request->parent_id)
+    ASSERT_ARG_NOT_NULL(request->file_info)
+
     CreateFileNodeRequest node_request = convert_from_rpc(*request);
 
     // print all info about CreateFileNodeRequest:

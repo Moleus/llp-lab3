@@ -18,3 +18,4 @@ include_directories(include)
 include_directories(${CMAKE_ROOT}/src/common/rpc)
 
 add_library(${PROJECT_NAME}_lib STATIC ${SOURCES} ${HEADERS})
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC common_lib)

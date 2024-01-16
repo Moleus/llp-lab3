@@ -38,5 +38,5 @@ list(APPEND srcs ${CMAKE_CURRENT_SOURCE_DIR}/common.c)
 add_library(my_rpc_lib STATIC ${srcs})
 
 find_package(Protobuf REQUIRED)
-target_link_libraries(my_rpc_lib PUBLIC ${Protobuf_LIBRARIES})
+target_link_libraries(my_rpc_lib PUBLIC ${Protobuf_LIBRARIES} common_lib)
 target_include_directories(my_rpc_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -1,10 +1,11 @@
 #include "common.h"
-#include <protobuf-c-rpc/protobuf-c-rpc.h>
 #include <malloc.h>
 #include "common.pb-c.h"
+#include "public/util/common.h"
 
 
 node_id_t convert_node_id_from_rpc(Rpc__NodeId *node_id) {
+    ASSERT_ARG_NOT_NULL(node_id)
     node_id_t result;
     result.page_id = (int32_t) node_id->page_id;
     result.item_id = (int32_t) node_id->item_id;
@@ -39,13 +40,12 @@ Rpc__CreateFileNodeRequest *convert_to_rpc(CreateFileNodeRequest request) {
 
     Rpc__CreateFileNodeRequest *createFileNodeRequest = malloc(sizeof(Rpc__CreateFileNodeRequest));
     Rpc__CreateFileNodeRequest tmp_createFileNodeRequest = RPC__CREATE_FILE_NODE_REQUEST__INIT;
-    createFileNodeRequest->parent_id = parent_id;
-    createFileNodeRequest->file_info = file_info;
+    tmp_createFileNodeRequest.parent_id = parent_id;
+    tmp_createFileNodeRequest.file_info = file_info;
     *createFileNodeRequest = tmp_createFileNodeRequest;
 
     return createFileNodeRequest;
 }
-
 
 Rpc__FileInfo convert_file_info_to_rpc(FileInfo file_info) {
     Rpc__FileInfo result = RPC__FILE_INFO__INIT;

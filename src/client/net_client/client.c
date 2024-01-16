@@ -4,8 +4,11 @@
 #include <protobuf-c-rpc/protobuf-c-rpc.h>
 #include <unistd.h>
 #include "common.h"
+#include "public/util/common.h"
 
 #define AUTO_RECONNECT_PERIOD_MS 10
+
+unsigned char log_level = DEBUG;
 
 static void die(const char *msg) {
     fprintf(stderr, "%s\n", msg);

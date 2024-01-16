@@ -53,11 +53,3 @@ int process_document(void) {// create document.
     document_destroy(doc);
     return 0;
 }
-
-int main(int argc, char const *argv[])
-{
-    // 1000 times
-    for (int i = 0; i < 10; ++i) {
-        process_document();
-    }
-}
