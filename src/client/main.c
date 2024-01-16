@@ -2,6 +2,8 @@
 #include "client.h"
 #include "common.h"
 #include "public/util/log.h"
+#include "parser/types.h"
+#include "parser/my_parser.h"
 
 
 unsigned char log_level = DEBUG;
@@ -11,9 +13,14 @@ unsigned char log_level = DEBUG;
 int main(int argc, char **argv) {
     char *address = "127.0.0.1:9090";
 
+    Query query = parse();
+    return 0;
+
     ClientService *service = client_service_new(address);
 
     for (;;) {
+        Query query = parse();
+
         // hardcoded sample data
         CreateFileNodeRequest data = {
                 .parent_id = {

@@ -13,7 +13,7 @@ add_flex_bison_dependency(Lexer Parser)
 set(SOURCE_FILES
         ${FLEX_Lexer_OUTPUTS}
         ${BISON_Parser_OUTPUTS}
-        main.c
+        my_parser.c
         types.c
 )
 
