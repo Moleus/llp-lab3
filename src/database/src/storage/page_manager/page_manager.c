@@ -3,6 +3,7 @@
 
 #include "private/storage/page.h"
 #include "private/storage/file_manager.h"
+#include "public/structures.h"
 
 // Public
 PageManager *page_manager_new(void) {

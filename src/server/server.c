@@ -6,6 +6,7 @@
 #include "public/util/common.h"
 #include "public/document_db/document.h"
 #include "public/util/node_print.h"
+#include "public/structures.h"
 
 static Document *g_document = NULL;
 
@@ -112,6 +113,7 @@ void init_document(const char* filepath, size_t page_size) {
 }
 
 int main() {
+//    test();
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
     const char* filepath = "/tmp/llp-heap-file";
     const char *listen_port = "9090";

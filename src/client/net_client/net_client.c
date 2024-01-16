@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include "converters.h"
 #include "public/util/common.h"
-#include "client.h"
+#include "net_client.h"
 
 #define AUTO_RECONNECT_PERIOD_MS 10
 
@@ -71,20 +71,3 @@ void client_add_node(ClientService *self, CreateNodeRequest *request) {
     while (!is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
-
-//void send__create_root_node(ProtobufCService *service) {
-//    CreateFileNodeRequest root_node = {
-//            .parent_id = {
-//                    .page_id = -1,
-//                    .item_id = -1
-//            },
-//            .file_info = {
-//                    .name = "root",
-//                    .owner = "root",
-//                    .access_time = 123456789,
-//                    .mime_type = "text/plain"
-//            }
-//    };
-//    send__create_request(service, root_node);
-//}
-

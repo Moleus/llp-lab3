@@ -2,6 +2,8 @@
 
 // print information about nodeValue based on type
 
+#include "public/structures.h"
+
 void print_node_value(NodeValue nodeValue) {
     switch (nodeValue.type) {
         case INT_32:

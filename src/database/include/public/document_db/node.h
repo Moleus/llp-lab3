@@ -2,6 +2,7 @@
 
 #include "public/util/common.h"
 #include "../../../../rpc/converters.h"
+#include "public/structures.h"
 #include <stdint.h>
 
 

@@ -5,38 +5,6 @@
 #include "common.pb-c.h"
 #include "public/structures.h"
 
-typedef struct __attribute((packed)) {
-    char* name;
-    char* owner;
-    uint64_t access_time;
-    char* mime_type;
-} FileInfo;
-
-typedef enum __attribute__((packed)) {
-    INT_32,
-    DOUBLE,
-    STRING,
-    BOOL,
-    FILE_INFO
-} ValueType;
-
-typedef struct __attribute__((packed)) {
-    ValueType type;
-    union __attribute__((packed)) {
-        int32_t int_value;
-        double double_value;
-        String string_value;
-        bool bool_value;
-        FileInfo file_info_value;
-    };
-} NodeValue;
-
-typedef struct __attribute__((packed)) {
-    node_id_t id;
-    node_id_t parent_id;
-    NodeValue value;
-} Node;
-
 typedef struct {
     NodeValue value;
     node_id_t parent;
@@ -51,6 +19,15 @@ typedef struct {
 typedef struct {
     node_id_t node_id;
 } DeleteNodeRequest;
+
+typedef struct {
+    int path_len;
+    char* names[];
+} names_path_t;
+
+typedef struct {
+   names_path_t names_path;
+} GetNodeByPath;
 
 Rpc__NodeId *convert_node_id_to_rpc(node_id_t node_id);
 

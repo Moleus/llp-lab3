@@ -1,6 +1,7 @@
 #include <assert.h>
 #include "private/document_db/document.h"
 #include "private/storage/page_manager.h"
+#include "public/structures.h"
 #include <time.h>
 
 #define FILE_SIGNATURE 0x12345678
@@ -288,3 +289,65 @@ Result document_get_all_children(Document *self, GetAllChildrenRequest *request,
     // didn't find parent node
     return OK;
 }
+
+Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
+    ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(matcher)
+    ASSERT_ARG_NOT_NULL(result)
+    assert(self->init_done);
+
+    Item item;
+    ItemIterator *items_it = page_manager_get_items(self->page_manager, &item);
+    while (item_iterator_has_next(items_it)) {
+        Result get_item_res = item_iterator_next(items_it, &item);
+        RETURN_IF_FAIL(get_item_res, "failed to get node from iterator")
+        Node *tmp_node = item.payload.data;
+        if (node_condition_matches(matcher, *tmp_node)) {
+            *result = *tmp_node;
+            item_iterator_destroy(items_it);
+            return OK;
+        }
+    }
+    item_iterator_destroy(items_it);
+    return ERROR("Node doesn't exist in document tree");
+}
+
+// returns closure NodeValueConditionFunc which compares parent_id with provided node_id
+NodeConditionFunc node_condition_parent_id_eq(node_id_t node_id) {
+    NodeConditionFunc condition = ^bool(Node value) {
+        return node_id_eq(value.parent_id, node_id);
+    }
+}
+
+// takes an array of matchers. Applies first on all nodes, then when condition matches, applies second matcher on children of first node, etc
+// until we satisfy the last matcher or none of the matchers match
+// After the node matches the condition, we add new condition that parent is the previous node id
+// when we match we delete the last condition
+Result document_get_node_by_condition_sequence(Document *self, NodeMatcher **matchers, size_t matchers_count, Node *result) {
+    ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(matchers)
+    ASSERT_ARG_NOT_NULL(result)
+    assert(self->init_done);
+
+    Node *current_node = malloc(sizeof(Node));
+    ASSERT_NOT_NULL(current_node, FAILED_TO_ALLOCATE_MEMORY)
+    *current_node = *self->root_node;
+
+    // TODO: should we start from root or the provided node?
+    node_id_t parent_id = ROOT_NODE_ID;
+    
+    for (size_t i = 0; i < matchers_count; i++) {
+        NodeMatcher *matcher = matchers[i];
+        node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
+        Result res = document_get_node_by_condition(self, matcher, current_node);
+        if (res.status != RES_OK) {
+            free(current_node);
+            return res;
+        }
+    }
+
+    *result = *current_node;
+    free(current_node);
+    return OK;
+}
+

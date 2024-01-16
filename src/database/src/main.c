@@ -1,4 +1,5 @@
 #include "public/document_db/document.h"
+#include "public/structures.h"
 
 // main
 unsigned char log_level = DEBUG;

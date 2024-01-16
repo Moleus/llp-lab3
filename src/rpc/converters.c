@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include "common.pb-c.h"
 #include "public/util/common.h"
+#include "public/structures.h"
 
 
 node_id_t convert_from_rpc_nodeId(Rpc__NodeId *node_id) {
