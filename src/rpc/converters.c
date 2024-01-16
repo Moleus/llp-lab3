@@ -33,6 +33,29 @@ Rpc__CreateNodeRequest *convert_to_rpc_CreateNodeRequest(CreateNodeRequest reque
     return createNodeRequest;
 }
 
+Rpc__UpdateNodeRequest *convert_to_rpc_UpdateNodeRequest(UpdateNodeRequest request) {
+    Rpc__NodeId *node_id = convert_node_id_to_rpc(request.node_id);
+
+    Rpc__UpdateNodeRequest *updateNodeRequest = malloc(sizeof(Rpc__UpdateNodeRequest));
+    Rpc__UpdateNodeRequest tmp_updateNodeRequest = RPC__UPDATE_NODE_REQUEST__INIT;
+    tmp_updateNodeRequest.id = node_id;
+    tmp_updateNodeRequest.value = convert_to_rpc_NodeValue(request.new_value);
+    *updateNodeRequest = tmp_updateNodeRequest;
+
+    return updateNodeRequest;
+}
+
+Rpc__DeleteNodeRequest *convert_to_rpc_DeleteNodeRequest(DeleteNodeRequest request) {
+    Rpc__NodeId *node_id = convert_node_id_to_rpc(request.node_id);
+
+    Rpc__DeleteNodeRequest *deleteNodeRequest = malloc(sizeof(Rpc__DeleteNodeRequest));
+    Rpc__DeleteNodeRequest tmp_deleteNodeRequest = RPC__DELETE_NODE_REQUEST__INIT;
+    tmp_deleteNodeRequest.id = node_id;
+    *deleteNodeRequest = tmp_deleteNodeRequest;
+
+    return deleteNodeRequest;
+}
+
 Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
     Rpc__NodeValue *result = malloc(sizeof(Rpc__NodeValue));
     Rpc__NodeValue tmp_result = RPC__NODE_VALUE__INIT;
@@ -62,10 +85,35 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
     return result;
 }
 
+Rpc__Node *convert_to_rpc_Node(Node node) {
+    Rpc__Node *result = malloc(sizeof(Rpc__Node));
+    Rpc__Node tmp_result = RPC__NODE__INIT;
+    tmp_result.id = convert_node_id_to_rpc(node.id);
+    tmp_result.parent_id = convert_node_id_to_rpc(node.parent_id);
+    tmp_result.value = convert_to_rpc_NodeValue(node.value);
+    *result = tmp_result;
+    return result;
+}
+
 CreateNodeRequest convert_from_rpc_CreateNodeRequest(Rpc__CreateNodeRequest request) {
     CreateNodeRequest result = {
             .parent = convert_from_rpc_nodeId(request.parent_id),
             .value = convert_from_rpc_NodeValue(*request.value)
+    };
+    return result;
+}
+
+UpdateNodeRequest convert_from_rpc_UpdateNodeRequest(Rpc__UpdateNodeRequest request) {
+    UpdateNodeRequest result = {
+            .node_id = convert_from_rpc_nodeId(request.id),
+            .new_value = convert_from_rpc_NodeValue(*request.value)
+    };
+    return result;
+}
+
+DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest request) {
+    DeleteNodeRequest result = {
+            .node_id = convert_from_rpc_nodeId(request.id)
     };
     return result;
 }
@@ -99,18 +147,6 @@ NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
             exit(1);
     }
     return result;
-}
-
-Rpc__CreateFileNodeRequest *convert_to_rpc(CreateFileNodeRequest request) {
-    Rpc__NodeId *parent_id = convert_node_id_to_rpc(request.parent_id);
-
-    Rpc__CreateFileNodeRequest *createFileNodeRequest = malloc(sizeof(Rpc__CreateFileNodeRequest));
-    Rpc__CreateFileNodeRequest tmp_createFileNodeRequest = RPC__CREATE_FILE_NODE_REQUEST__INIT;
-    tmp_createFileNodeRequest.parent_id = parent_id;
-    tmp_createFileNodeRequest.file_info = convert_to_rpc_FileInfo(request.file_info);
-    *createFileNodeRequest = tmp_createFileNodeRequest;
-
-    return createFileNodeRequest;
 }
 
 Rpc__FileInfo *convert_to_rpc_FileInfo(FileInfo file_info) {

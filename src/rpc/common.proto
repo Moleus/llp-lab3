@@ -69,7 +69,8 @@ message CreateNodeRequest {
 
 message UpdateNodeRequest {
   NodeId id = 1;
-  NodeValue value = 2;
+  NodeId parent_id = 2;
+  NodeValue value = 3;
 }
 
 message DeleteNodeRequest {
@@ -86,8 +87,7 @@ message CreateFileNodeResponse {
 }
 
 service Database {
-  rpc CreateFileNode(CreateFileNodeRequest) returns (CreateFileNodeResponse);
-  rpc CreateNode(CreateNodeRequest) returns (NodeId);
+  rpc CreateNode(CreateNodeRequest) returns (Node);
   rpc UpdateNode(UpdateNodeRequest) returns (Node);
   rpc DeleteNode(DeleteNodeRequest) returns (Node);
   rpc GetNode(NodeId) returns (Node);

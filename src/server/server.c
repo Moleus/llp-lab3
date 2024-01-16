@@ -5,64 +5,99 @@
 #include <signal.h>
 #include "public/util/common.h"
 #include "public/document_db/document.h"
+#include "public/util/node_print.h"
 
 static Document *g_document = NULL;
 
 // Implement server logic here
-void handle_create_node_request(const Rpc__CreateFileNodeRequest *request, Rpc__CreateFileNodeResponse *response) {
+void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node *response) {
     ASSERT_ARG_NOT_NULL(request)
     ASSERT_ARG_NOT_NULL(response)
     ASSERT_ARG_NOT_NULL(request->parent_id)
-    ASSERT_ARG_NOT_NULL(request->file_info)
+    ASSERT_ARG_NOT_NULL(request->value)
 
-    CreateFileNodeRequest node_request = convert_from_rpc_CreateFileNodeRequest(*request);
+    CreateNodeRequest node_request = convert_from_rpc_CreateNodeRequest(*request);
 
-    // print all info about CreateFileNodeRequest:
-    printf("parent_id: (%d/%d)\n", node_request.parent_id.page_id, node_request.parent_id.item_id);
-    printf("file_info: {\n");
-    printf("\tname: %s\n", node_request.file_info.name);
-    printf("\towner: %s\n", node_request.file_info.owner);
-    printf("\taccess_time: %lu\n", node_request.file_info.access_time);
-    printf("\tmime_type: %s\n", node_request.file_info.mime_type);
-    printf("}\n");
+    printf("parent_id: (%d/%d)\n", node_request.parent.page_id, node_request.parent.item_id);
 
     Node *result = malloc(sizeof(Node));
 
     CreateNodeRequest create_node_request = {
-        .parent = node_request.parent_id,
-        .value = (NodeValue) {
-            .type = FILE_INFO,
-            .file_info_value = node_request.file_info
-        }
+        .parent = node_request.parent,
+        .value = node_request.value
     };
     Result res = document_add_node(g_document, &create_node_request, result);
     if (res.status != RES_OK) {
         LOG_ERR("failed to add node: %s", res.message);
         exit(1);
     }
-    response->node_id = convert_node_id_to_rpc(result->id);
+    // TODO: pointer or value? is it initialized?
+    *response = *convert_to_rpc_Node(*result);
 }
 
-void prefix__create_file_node(Rpc__Database_Service *service, const Rpc__CreateFileNodeRequest *input, Rpc__CreateFileNodeResponse_Closure closure, void *closure_data) {
+void handle_update_node_request(const Rpc__UpdateNodeRequest *request, Rpc__Node *response) {
+    ASSERT_ARG_NOT_NULL(request)
+    ASSERT_ARG_NOT_NULL(response)
+    ASSERT_ARG_NOT_NULL(request->id)
+    ASSERT_ARG_NOT_NULL(request->value)
+
+    UpdateNodeRequest node_request = convert_from_rpc_UpdateNodeRequest(*request);
+
+    Node *result = malloc(sizeof(Node));
+
+    Result res = document_update_node(g_document, &node_request, result);
+    if (res.status != RES_OK) {
+        LOG_ERR("failed to update node: %s", res.message);
+        exit(1);
+    }
+
+    *response = *convert_to_rpc_Node(*result);
+}
+
+void handle_delete_node_request(const Rpc__DeleteNodeRequest *request, Rpc__Node *response) {
+    ASSERT_ARG_NOT_NULL(request)
+    ASSERT_ARG_NOT_NULL(response)
+    ASSERT_ARG_NOT_NULL(request->id)
+
+    DeleteNodeRequest node_request = convert_from_rpc_DeleteNodeRequest(*request);
+
+    Node *result = malloc(sizeof(Node));
+
+    Result res = document_delete_node(g_document, &node_request, result);
+    if (res.status != RES_OK) {
+        LOG_ERR("failed to delete node: %s", res.message);
+        exit(1);
+    }
+
+    *response = *convert_to_rpc_Node(*result);
+}
+
+void prefix__create_node(Rpc__Database_Service *service, const Rpc__CreateNodeRequest *input, Rpc__Node_Closure closure, void *closure_data) {
     (void) service;
-    printf("backend__create_file_node\n");
-    Rpc__CreateFileNodeResponse response = RPC__CREATE_FILE_NODE_RESPONSE__INIT;
+    Rpc__Node response = RPC__NODE__INIT;
     handle_create_node_request(input, &response);
     closure(&response, closure_data);
 }
 
-void prefix__create_node(Rpc__Database_Service *service, const Rpc__CreateNodeRequest *input, Rpc__NodeId_Closure closure, void *closure_data) {
+void prefix__update_node(Rpc__Database_Service *service, const Rpc__UpdateNodeRequest *input, Rpc__Node_Closure closure, void *closure_data) {
     (void) service;
-    printf("backend__create_node\n");
-    Node *result = malloc(sizeof(Node));
-    CreateNodeRequest create_node_request = convert_from_rpc_CreateFileNodeRequest()
-    Result res = document_add_node(g_document, input, result);
-    if (res.status != RES_OK) {
-        LOG_ERR("failed to add node: %s", res.message);
-        exit(1);
-    }
-    response.node_id = convert_node_id_to_rpc(result->id);
+    Rpc__Node response = RPC__NODE__INIT;
+    handle_update_node_request(input, &response);
     closure(&response, closure_data);
+}
+
+void prefix__delete_node(Rpc__Database_Service *service, const Rpc__DeleteNodeRequest *input, Rpc__Node_Closure closure, void *closure_data) {
+    (void) service;
+    Rpc__Node response = RPC__NODE__INIT;
+    handle_delete_node_request(input, &response);
+    closure(&response, closure_data);
+}
+
+void prefix__get_node(Rpc__Database_Service *service, const Rpc__NodeId *input, Rpc__Node_Closure closure, void *closure_data) {
+    (void) service;
+    (void) input;
+    (void) closure;
+    (void) closure_data;
 }
 
 static Rpc__Database_Service databaseService = RPC__DATABASE__INIT(prefix__);

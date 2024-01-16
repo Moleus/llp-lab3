@@ -99,10 +99,10 @@ FunctionType get_function_type(char *func) {
 }
 
 void add_node(Query *query, char *node) {
-    Node *new_node = my_malloc(sizeof(Node));
+    ParsedNode *new_node = my_malloc(sizeof(ParsedNode));
     new_node->name = strdup(node);
 
-    Node *cur_node = query->nodes;
+    ParsedNode *cur_node = query->nodes;
     if (cur_node == NULL) {
         query->nodes = new_node;
         return;
@@ -114,7 +114,7 @@ void add_node(Query *query, char *node) {
 }
 
 void add_filter(Query *query, Filter *filter) {
-    Node *cur_node = query->nodes;
+    ParsedNode *cur_node = query->nodes;
     assert(cur_node != NULL);
     while (cur_node->next != NULL) {
         cur_node = cur_node->next;
@@ -154,7 +154,7 @@ void print_element(Element *el) {
     }
 }
 
-void print_node(Node *node) {
+void print_node(ParsedNode *node) {
     int indent_level = 0;
     while (node != NULL) {
         print_tab(indent_level);

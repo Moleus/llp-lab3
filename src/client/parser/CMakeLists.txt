@@ -22,8 +22,4 @@ set(SOURCE_FILES
 )
 
 add_library(parser_lib STATIC ${SOURCE_FILES})
-target_include_directories(parser_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${PARSER_DIR} .)
-
-add_executable(parser main.c)
-target_link_libraries(parser parser_lib)
-target_include_directories(parser PRIVATE ${CMAKE_CURRENT_BINARY_DIR} ${PARSER_DIR} .)
+target_include_directories(parser_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR} PRIVATE ${PARSER_DIR} PRIVATE .)

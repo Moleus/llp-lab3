@@ -29,10 +29,10 @@ typedef enum {
     NUMBER_TYPE,
     DOUBLE_TYPE,
     STRING_TYPE
-} ValueType;
+} ParsedValueType;
 
 typedef struct {
-    ValueType type;
+    ParsedValueType type;
     union {
         bool boolean;
         int32_t number;
@@ -60,7 +60,7 @@ typedef struct {
 } FilterExpr;
 
 typedef struct {
-    ValueType type;
+    ParsedValueType type;
     char *name;
 } Property;
 
@@ -77,15 +77,15 @@ typedef enum {
     ASTERISK_PATH,
 } PathType;
 
-typedef struct Node {
+typedef struct ParsedNode {
     char *name;
-    struct Node *next;
+    struct ParsedNode *next;
     Filter* filters;
-} Node;
+} ParsedNode;
 
 typedef struct {
     FunctionType func;
-    Node *nodes;
+    ParsedNode *nodes;
 } Query;
 
 Element *create_boolean(bool value);

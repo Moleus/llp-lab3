@@ -118,11 +118,12 @@ struct  Rpc__UpdateNodeRequest
 {
   ProtobufCMessage base;
   Rpc__NodeId *id;
+  Rpc__NodeId *parent_id;
   Rpc__NodeValue *value;
 };
 #define RPC__UPDATE_NODE_REQUEST__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__update_node_request__descriptor) \
-, NULL, NULL }
+, NULL, NULL, NULL }
 
 
 struct  Rpc__DeleteNodeRequest
@@ -363,13 +364,9 @@ typedef struct Rpc__Database_Service Rpc__Database_Service;
 struct Rpc__Database_Service
 {
   ProtobufCService base;
-  void (*create_file_node)(Rpc__Database_Service *service,
-                           const Rpc__CreateFileNodeRequest *input,
-                           Rpc__CreateFileNodeResponse_Closure closure,
-                           void *closure_data);
   void (*create_node)(Rpc__Database_Service *service,
                       const Rpc__CreateNodeRequest *input,
-                      Rpc__NodeId_Closure closure,
+                      Rpc__Node_Closure closure,
                       void *closure_data);
   void (*update_node)(Rpc__Database_Service *service,
                       const Rpc__UpdateNodeRequest *input,
@@ -391,18 +388,13 @@ void rpc__database__init (Rpc__Database_Service *service,
     { &rpc__database__descriptor, protobuf_c_service_invoke_internal, NULL }
 #define RPC__DATABASE__INIT(function_prefix__) \
     { RPC__DATABASE__BASE_INIT,\
-      function_prefix__ ## create_file_node,\
       function_prefix__ ## create_node,\
       function_prefix__ ## update_node,\
       function_prefix__ ## delete_node,\
       function_prefix__ ## get_node  }
-void rpc__database__create_file_node(ProtobufCService *service,
-                                     const Rpc__CreateFileNodeRequest *input,
-                                     Rpc__CreateFileNodeResponse_Closure closure,
-                                     void *closure_data);
 void rpc__database__create_node(ProtobufCService *service,
                                 const Rpc__CreateNodeRequest *input,
-                                Rpc__NodeId_Closure closure,
+                                Rpc__Node_Closure closure,
                                 void *closure_data);
 void rpc__database__update_node(ProtobufCService *service,
                                 const Rpc__UpdateNodeRequest *input,

@@ -19,12 +19,6 @@ inline static bool node_id_eq(node_id_t node_id1, node_id_t node_id2) {
     return node_id1.page_id == node_id2.page_id && node_id1.item_id == node_id2.item_id;
 }
 
-typedef struct __attribute__((packed)) {
-    node_id_t id;
-    node_id_t parent_id;
-    NodeValue value;
-} Node;
-
 Result node_new(size_t id, Node *parent, NodeValue value, Node *result);
 
 Result node_add_child(Node *self, Node *child);

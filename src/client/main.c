@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
     char *command = "a/b/d[@x=1][@y=2][@z=hello]\n";
     parser_parse_command(command);
-    return 0;
+//    return 0;
 
     ClientService *service = client_service_new(address);
 
@@ -21,22 +21,25 @@ int main(int argc, char **argv) {
 //        Query query = parse();
 
         // hardcoded sample data
-        CreateFileNodeRequest data = {
-                .parent_id = {
+        CreateNodeRequest data = {
+                .parent = {
                         .page_id = 0,
                         .item_id = 0
                 },
-                .file_info = {
-                        .name = "test.txt",
-                        .owner = "test",
-                        .access_time = 123456789,
-                        .mime_type = "text/plain"
+                .value = (NodeValue) {
+                        .type = FILE_INFO,
+                        .file_info_value = {
+                                .name = "test.txt",
+                                .owner = "test",
+                                .access_time = 123456789,
+                                .mime_type = "text/plain"
+                        }
                 }
         };
 
         run_main_loop(service);
 
-        client_add_fileNode(service, &data);
+        client_add_node(service, &data);
         sleep(5);
     }
 }

@@ -11,15 +11,6 @@ typedef struct {
 } Document;
 
 typedef struct {
-    Node *node;
-    NodeValue new_value;
-} UpdateNodeRequest;
-
-typedef struct {
-    Node *node;
-} DeleteNodeRequest;
-
-typedef struct {
     node_id_t parent;
     size_t count;
     NodeValue values[];
@@ -49,9 +40,9 @@ Result document_add_node(Document *self, CreateNodeRequest *request, Node *resul
 
 Result document_add_bulk_nodes(Document *self, CreateMultipleNodesRequest *request, CreateMultipleNodesResult *result);
 
-Result document_delete_node(Document *self, DeleteNodeRequest *request);
+Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *result);
 
-Result document_update_node(Document *self, UpdateNodeRequest *request);
+Result document_update_node(Document *self, UpdateNodeRequest *request, Node *result);
 
 Result document_get_all_children(Document *self, GetAllChildrenRequest *request, GetAllChildrenResult *result);
 

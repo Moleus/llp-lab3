@@ -792,7 +792,7 @@ const ProtobufCMessageDescriptor rpc__create_node_request__descriptor =
   (ProtobufCMessageInit) rpc__create_node_request__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCFieldDescriptor rpc__update_node_request__field_descriptors[2] =
+static const ProtobufCFieldDescriptor rpc__update_node_request__field_descriptors[3] =
 {
   {
     "id",
@@ -807,8 +807,20 @@ static const ProtobufCFieldDescriptor rpc__update_node_request__field_descriptor
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
-    "value",
+    "parent_id",
     2,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_MESSAGE,
+    0,   /* quantifier_offset */
+    offsetof(Rpc__UpdateNodeRequest, parent_id),
+    &rpc__node_id__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "value",
+    3,
     PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_MESSAGE,
     0,   /* quantifier_offset */
@@ -821,12 +833,13 @@ static const ProtobufCFieldDescriptor rpc__update_node_request__field_descriptor
 };
 static const unsigned rpc__update_node_request__field_indices_by_name[] = {
   0,   /* field[0] = id */
-  1,   /* field[1] = value */
+  1,   /* field[1] = parent_id */
+  2,   /* field[2] = value */
 };
 static const ProtobufCIntRange rpc__update_node_request__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 2 }
+  { 0, 3 }
 };
 const ProtobufCMessageDescriptor rpc__update_node_request__descriptor =
 {
@@ -836,7 +849,7 @@ const ProtobufCMessageDescriptor rpc__update_node_request__descriptor =
   "Rpc__UpdateNodeRequest",
   "Rpc",
   sizeof(Rpc__UpdateNodeRequest),
-  2,
+  3,
   rpc__update_node_request__field_descriptors,
   rpc__update_node_request__field_indices_by_name,
   1,  rpc__update_node_request__number_ranges,
@@ -970,20 +983,18 @@ const ProtobufCMessageDescriptor rpc__create_file_node_response__descriptor =
   (ProtobufCMessageInit) rpc__create_file_node_response__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCMethodDescriptor rpc__database__method_descriptors[5] =
+static const ProtobufCMethodDescriptor rpc__database__method_descriptors[4] =
 {
-  { "CreateFileNode", &rpc__create_file_node_request__descriptor, &rpc__create_file_node_response__descriptor },
-  { "CreateNode", &rpc__create_node_request__descriptor, &rpc__node_id__descriptor },
+  { "CreateNode", &rpc__create_node_request__descriptor, &rpc__node__descriptor },
   { "UpdateNode", &rpc__update_node_request__descriptor, &rpc__node__descriptor },
   { "DeleteNode", &rpc__delete_node_request__descriptor, &rpc__node__descriptor },
   { "GetNode", &rpc__node_id__descriptor, &rpc__node__descriptor },
 };
 const unsigned rpc__database__method_indices_by_name[] = {
-  0,        /* CreateFileNode */
-  1,        /* CreateNode */
-  3,        /* DeleteNode */
-  4,        /* GetNode */
-  2         /* UpdateNode */
+  0,        /* CreateNode */
+  2,        /* DeleteNode */
+  3,        /* GetNode */
+  1         /* UpdateNode */
 };
 const ProtobufCServiceDescriptor rpc__database__descriptor =
 {
@@ -992,25 +1003,17 @@ const ProtobufCServiceDescriptor rpc__database__descriptor =
   "Database",
   "Rpc__Database",
   "Rpc",
-  5,
+  4,
   rpc__database__method_descriptors,
   rpc__database__method_indices_by_name
 };
-void rpc__database__create_file_node(ProtobufCService *service,
-                                     const Rpc__CreateFileNodeRequest *input,
-                                     Rpc__CreateFileNodeResponse_Closure closure,
-                                     void *closure_data)
-{
-  assert(service->descriptor == &rpc__database__descriptor);
-  service->invoke(service, 0, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
-}
 void rpc__database__create_node(ProtobufCService *service,
                                 const Rpc__CreateNodeRequest *input,
-                                Rpc__NodeId_Closure closure,
+                                Rpc__Node_Closure closure,
                                 void *closure_data)
 {
   assert(service->descriptor == &rpc__database__descriptor);
-  service->invoke(service, 1, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
+  service->invoke(service, 0, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
 void rpc__database__update_node(ProtobufCService *service,
                                 const Rpc__UpdateNodeRequest *input,
@@ -1018,7 +1021,7 @@ void rpc__database__update_node(ProtobufCService *service,
                                 void *closure_data)
 {
   assert(service->descriptor == &rpc__database__descriptor);
-  service->invoke(service, 2, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
+  service->invoke(service, 1, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
 void rpc__database__delete_node(ProtobufCService *service,
                                 const Rpc__DeleteNodeRequest *input,
@@ -1026,7 +1029,7 @@ void rpc__database__delete_node(ProtobufCService *service,
                                 void *closure_data)
 {
   assert(service->descriptor == &rpc__database__descriptor);
-  service->invoke(service, 3, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
+  service->invoke(service, 2, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
 void rpc__database__get_node(ProtobufCService *service,
                              const Rpc__NodeId *input,
@@ -1034,7 +1037,7 @@ void rpc__database__get_node(ProtobufCService *service,
                              void *closure_data)
 {
   assert(service->descriptor == &rpc__database__descriptor);
-  service->invoke(service, 4, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
+  service->invoke(service, 3, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
 void rpc__database__init (Rpc__Database_Service *service,
                           Rpc__Database_ServiceDestroy destroy)

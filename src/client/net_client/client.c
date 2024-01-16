@@ -51,23 +51,23 @@ void run_main_loop(ClientService *self) {
     run_main_loop_without_blocking(protobuf_c_rpc_dispatch_default());
 }
 
-static void handle_create_response(const Rpc__CreateFileNodeResponse *response, void *closure_data) {
+static void handle_create_response(const Rpc__Node *response, void *closure_data) {
     printf("handle_create_response\n");
     if (response == NULL) {
         printf("Error processing request.\n");
     } else {
-        node_id_t node_id = convert_from_rpc_nodeId(response->node_id);
+        node_id_t node_id = convert_from_rpc_nodeId(response->id);
         printf("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
     }
     *(protobuf_c_boolean *) closure_data = 1;
 }
 
-void client_add_fileNode(ClientService *self, CreateFileNodeRequest *request) {
+void client_add_node(ClientService *self, CreateNodeRequest *request) {
     protobuf_c_boolean is_done = 0;
-    Rpc__CreateFileNodeRequest *query = convert_to_rpc(*request);
+    Rpc__CreateNodeRequest *query = convert_to_rpc_CreateNodeRequest(*request);
 
-    printf("client_add_fileNode\n");
-    rpc__database__create_file_node(self->service, query, handle_create_response, &is_done);
+    printf("client_add_node\n");
+    rpc__database__create_node(self->service, query, handle_create_response, &is_done);
     while (!is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }

@@ -139,12 +139,12 @@ Result document_add_node(Document *self, CreateNodeRequest *request, Node *resul
 }
 
 // --- DELETE NODE ---
-Result document_delete_node(Document *self, DeleteNodeRequest *request) {
+Result document_delete_node(Document *self, DeleteNodeRequest *request, Node* result) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(request)
     assert(self->init_done);
 
-    LOG_DEBUG("Document - Deleting node (%d:%d)", request->node->id.page_id, request->node->id.item_id);
+    LOG_DEBUG("Document - Deleting node (%d:%d)", request->node_id.page_id, request->node_id.item_id);
     // if node contains children - raise error
     Item item = {0};
     ItemIterator *items_it = page_manager_get_items(self->page_manager, &item);
@@ -153,7 +153,7 @@ Result document_delete_node(Document *self, DeleteNodeRequest *request) {
         RETURN_IF_FAIL(get_item_res, "failed to delete node")
         Node *tmp_node = item.payload.data;
 
-        if (node_id_eq(tmp_node->parent_id, request->node->id)) {
+        if (node_id_eq(tmp_node->parent_id, request->node_id)) {
             // We are trying to delete node with children
             item_iterator_destroy(items_it);
             ABORT_EXIT(INTERNAL_LIB_ERROR, "Node contains children")
@@ -175,7 +175,7 @@ Result document_delete_second_step(Document *self, DeleteNodeRequest *request) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to delete node")
         item_index_t item_id = item.id;
-        if (item_id.page_id.id == request->node->id.page_id && item_id.item_id == request->node->id.item_id) {
+        if (item_id.page_id.id == request->node_id.page_id && item_id.item_id == request->node_id.item_id) {
             // We found our node
             Page *page = items_it->page_iterator->current_page;
             Result res = page_manager_delete_item(self->page_manager, page, &item);
@@ -192,22 +192,22 @@ Result document_delete_second_step(Document *self, DeleteNodeRequest *request) {
 }
 
 // --- UPDATE NODE ---
-Result document_update_node(Document *self, UpdateNodeRequest *request) {
+Result document_update_node(Document *self, UpdateNodeRequest *request, Node* result) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(request)
     assert(self->init_done);
     // delete + add
 
     DeleteNodeRequest delete_request = {
-            .node = request->node
+            .node_id = request->node_id
     };
     CreateNodeRequest create_request = {
-            .parent = request->node->parent_id,
+            .parent = request->parent_id,
             .value = request->new_value
     };
-    Result res = document_delete_node(self, &delete_request);
+    Result res = document_delete_node(self, &delete_request, result);
     RETURN_IF_FAIL(res, "failed to delete node while updating")
-    res = document_add_node(self, &create_request, request->node);
+    res = document_add_node(self, &create_request, result);
     RETURN_IF_FAIL(res, "failed to add node while updating")
     return OK;
 }
