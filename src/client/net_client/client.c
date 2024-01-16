@@ -5,31 +5,23 @@
 #include <unistd.h>
 #include "common.h"
 #include "public/util/common.h"
+#include "client.h"
 
 #define AUTO_RECONNECT_PERIOD_MS 10
-
-unsigned char log_level = DEBUG;
 
 static void die(const char *msg) {
     fprintf(stderr, "%s\n", msg);
     exit(EXIT_FAILURE);
 }
 
-/* Run the main-loop without blocking.  It would be nice
-   if there was a simple API for this (protobuf_c_rpc_dispatch_run_with_timeout?),
-   but there isn't for now. */
-static void do_nothing(ProtobufCRPCDispatch *dispatch, void *unused) {
-}
-
-static void run_main_loop_without_blocking(ProtobufCRPCDispatch *dispatch) {
-    protobuf_c_rpc_dispatch_add_idle(dispatch, do_nothing, NULL);
-    protobuf_c_rpc_dispatch_run(dispatch);
-}
-
-ProtobufCService *my_connect(char *address) {
-    ProtobufC_RPC_Client *client;
+struct ClientService {
     ProtobufCService *service;
-    service = protobuf_c_rpc_client_new(PROTOBUF_C_RPC_ADDRESS_TCP, address, &rpc__database__descriptor,
+};
+
+ClientService *client_service_new(char *address) {
+    ClientService *self = malloc(sizeof(ClientService));
+    ProtobufC_RPC_Client *client;
+    ProtobufCService *service = protobuf_c_rpc_client_new(PROTOBUF_C_RPC_ADDRESS_TCP, address, &rpc__database__descriptor,
                                         NULL);
     if (service == NULL)
         die("Error creating client");
@@ -42,9 +34,22 @@ ProtobufCService *my_connect(char *address) {
     while (!protobuf_c_rpc_client_is_connected(client))
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
     fprintf(stderr, "done.\n");
-    return service;
+
+    self->service = service;
+    return self;
 }
 
+static void do_nothing(ProtobufCRPCDispatch *dispatch, void *unused) {
+}
+
+static void run_main_loop_without_blocking(ProtobufCRPCDispatch *dispatch) {
+    protobuf_c_rpc_dispatch_add_idle(dispatch, do_nothing, NULL);
+    protobuf_c_rpc_dispatch_run(dispatch);
+}
+
+void run_main_loop(ClientService *self) {
+    run_main_loop_without_blocking(protobuf_c_rpc_dispatch_default());
+}
 
 static void handle_create_response(const Rpc__CreateFileNodeResponse *response, void *closure_data) {
     printf("handle_create_response\n");
@@ -57,57 +62,29 @@ static void handle_create_response(const Rpc__CreateFileNodeResponse *response, 
     *(protobuf_c_boolean *) closure_data = 1;
 }
 
-void send__create_request(ProtobufCService *service, CreateFileNodeRequest createFileNode) {
+void client_add_fileNode(ClientService *self, CreateFileNodeRequest *request) {
     protobuf_c_boolean is_done = 0;
-    Rpc__CreateFileNodeRequest *query = convert_to_rpc(createFileNode);
+    Rpc__CreateFileNodeRequest *query = convert_to_rpc(*request);
 
-    printf("send__create_request\n");
-    rpc__database__create_file_node(service, query, handle_create_response, &is_done);
+    printf("client_add_fileNode\n");
+    rpc__database__create_file_node(self->service, query, handle_create_response, &is_done);
     while (!is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
 
-void send__create_root_node(ProtobufCService *service) {
-    CreateFileNodeRequest root_node = {
-            .parent_id = {
-                    .page_id = -1,
-                    .item_id = -1
-            },
-            .file_info = {
-                    .name = "root",
-                    .owner = "root",
-                    .access_time = 123456789,
-                    .mime_type = "text/plain"
-            }
-    };
-    send__create_request(service, root_node);
-}
-
-int main(int argc, char **argv) {
-    char *address = "127.0.0.1:9090";
-    ProtobufCService *service = my_connect(address);
-
-    for (;;) {
-        // hardcoded sample data
-        CreateFileNodeRequest data = {
-                .parent_id = {
-                        .page_id = 0,
-                        .item_id = 0
-                },
-                .file_info = {
-                        .name = "test.txt",
-                        .owner = "test",
-                        .access_time = 123456789,
-                        .mime_type = "text/plain"
-                }
-        };
-
-        run_main_loop_without_blocking(protobuf_c_rpc_dispatch_default());
-
-        send__create_request(service, data);
-        printf("data sent\n");
-        // sleep 3 seconds
-        sleep(3);
-    }
-}
+//void send__create_root_node(ProtobufCService *service) {
+//    CreateFileNodeRequest root_node = {
+//            .parent_id = {
+//                    .page_id = -1,
+//                    .item_id = -1
+//            },
+//            .file_info = {
+//                    .name = "root",
+//                    .owner = "root",
+//                    .access_time = 123456789,
+//                    .mime_type = "text/plain"
+//            }
+//    };
+//    send__create_request(service, root_node);
+//}
 

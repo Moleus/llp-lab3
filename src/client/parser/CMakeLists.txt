@@ -17,8 +17,5 @@ set(SOURCE_FILES
         types.c
 )
 
-# Include directories if needed
-include_directories(${CMAKE_CURRENT_BINARY_DIR} .)
-
-# Create the executable
 add_library(parser_lib STATIC ${SOURCE_FILES})
+target_include_directories(parser_lib PRIVATE ${CMAKE_CURRENT_BINARY_DIR} .)
