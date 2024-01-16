@@ -14,8 +14,9 @@ IF ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     add_compile_definitions(WINDOWS)
 ENDIF ()
 
-include_directories(include)
-include_directories(${CMAKE_ROOT}/src/common/rpc)
 
-add_library(${PROJECT_NAME}_lib STATIC ${SOURCES} ${HEADERS})
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC common_lib)
+# todo: removed rpc include
+
+add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
+target_include_directories(${PROJECT_NAME}_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+target_link_libraries(${PROJECT_NAME}_lib LINK_PUBLIC common_lib)

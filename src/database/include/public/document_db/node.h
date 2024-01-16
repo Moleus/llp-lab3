@@ -1,7 +1,7 @@
 #pragma once
 
 #include "public/util/common.h"
-#include "../../../../../rpc/common.h"
+#include "../../../../rpc/common.h"
 #include <stdint.h>
 
 typedef enum __attribute__((packed)) {

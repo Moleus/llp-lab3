@@ -1,11 +1,7 @@
 #pragma once
 #include "stdint.h"
 #include "common.pb-c.h"
-
-typedef struct __attribute__((packed)) {
-    const char *value;
-    uint32_t length;
-} String;
+#include "public/structures.h"
 
 typedef struct __attribute((packed)) {
     char* name;
@@ -13,11 +9,6 @@ typedef struct __attribute((packed)) {
     uint64_t access_time;
     char* mime_type;
 } FileInfo;
-
-typedef struct __attribute__((packed)) {
-    int32_t page_id;
-    int32_t item_id;
-} node_id_t;
 
 typedef struct CreateFileNodeRequest {
     node_id_t parent_id;
