@@ -1,19 +1,8 @@
 #pragma once
 
 #include "public/util/common.h"
+#include "../../../../../rpc/common.h"
 #include <stdint.h>
-
-typedef struct __attribute__((packed)) {
-    const char *value;
-    uint32_t length;
-} String;
-
-typedef struct __attribute((packed)) {
-    String name;
-    String owner;
-    uint64_t atime;
-    String mime_type;
-} FileInfo;
 
 typedef enum __attribute__((packed)) {
     INT_32,
@@ -34,10 +23,6 @@ typedef struct __attribute__((packed)) {
     };
 } NodeValue;
 
-typedef struct __attribute__((packed)) {
-    int32_t page_id;
-    int32_t item_id;
-} node_id_t;
 
 static const node_id_t ROOT_NODE_ID = {0, 0};
 inline static bool is_root_node(node_id_t node_id) {

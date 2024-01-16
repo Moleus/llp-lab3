@@ -2,22 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <protobuf-c-rpc/protobuf-c-rpc.h>
-#include "common.pb-c.h"
+#include <unistd.h>
+#include "common.h"
 
 #define AUTO_RECONNECT_PERIOD_MS 10
 
 static void die(const char *msg) {
     fprintf(stderr, "%s\n", msg);
     exit(EXIT_FAILURE);
-}
-
-static void handle_response(const Rpc__Response *response, void *closure_data) {
-    if (response == NULL) {
-        printf("Error processing request.\n");
-    } else {
-        printf("Server response: %d\n", response->result);
-    }
-    *(protobuf_c_boolean *) closure_data = 1;
 }
 
 /* Run the main-loop without blocking.  It would be nice
@@ -31,12 +23,10 @@ static void run_main_loop_without_blocking(ProtobufCRPCDispatch *dispatch) {
     protobuf_c_rpc_dispatch_run(dispatch);
 }
 
-int main(int argc, char **argv) {
+ProtobufCService *my_connect(char * address) {
     ProtobufC_RPC_Client *client;
     ProtobufCService *service;
-
-    // Connect to the server
-    service = protobuf_c_rpc_client_new(PROTOBUF_C_RPC_ADDRESS_TCP, "127.0.0.1:9090", &rpc__multiplication__descriptor,
+    service = protobuf_c_rpc_client_new(PROTOBUF_C_RPC_ADDRESS_TCP, address, &rpc__database__descriptor,
                                         NULL);
     if (service == NULL)
         die("Error creating client");
@@ -49,24 +39,78 @@ int main(int argc, char **argv) {
     while (!protobuf_c_rpc_client_is_connected(client))
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
     fprintf(stderr, "done.\n");
+    return service;
+}
+
+
+static void handle_create_response(const Rpc__CreateFileNodeResponse *response, void *closure_data) {
+    printf("handle_create_response\n");
+    if (response == NULL) {
+        printf("Error processing request.\n");
+    } else {
+        node_id_t node_id = convert_node_id_from_rpc(response->node_id);
+        printf("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
+    }
+    *(protobuf_c_boolean *) closure_data = 1;
+}
+
+void send__create_request(ProtobufCService *service, CreateFileNodeRequest createFileNode) {
+    Rpc__CreateFileNodeRequest query = RPC__CREATE_FILE_NODE_REQUEST__INIT;
+    protobuf_c_boolean is_done = 0;
+    Rpc__CreateFileNodeRequest rpc_query_data = convert_to_rpc(createFileNode);
+    query.parent_id = rpc_query_data.parent_id;
+    query.file_info = rpc_query_data.file_info;
+
+    printf("send__create_request\n");
+    rpc__database__create_file_node(service, &query, handle_create_response, &is_done);
+    while (!is_done)
+        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
+}
+
+int main(int argc, char **argv) {
+    char *address = "127.0.0.1:9090";
+    ProtobufCService *service = my_connect(address);
 
     for (;;) {
-        char buf[1024];
-        Rpc__Request query = RPC__REQUEST__INIT;
-        protobuf_c_boolean is_done = 0;
-        fprintf(stderr, ">> ");
-        if (fgets(buf, sizeof(buf), stdin) == NULL)
-            break;
+        // hardcoded sample data
+        CreateFileNodeRequest data = {
+            .parent_id = {
+                .page_id = 1,
+                .item_id = 2
+            },
+            .file_info = {
+                .name = "test.txt",
+                .owner = "test",
+                .access_time = 123456789,
+                .mime_type = "text/plain"
+            }
+        };
 
-        /* In order to prevent having the client get unduly stuck
-           in an error state, exercise the main-loop, which will
-           give the connection process time to run. */
+        // hardcoded root note parent_id = {-1, -1}
+        CreateFileNodeRequest root_node = {
+            .parent_id = {
+                .page_id = -1,
+                .item_id = -1
+            },
+            .file_info = {
+                .name = "root",
+                .owner = "root",
+                .access_time = 123456789,
+                .mime_type = "text/plain"
+            }
+        };
+
         run_main_loop_without_blocking(protobuf_c_rpc_dispatch_default());
 
-        query.number = atoi(buf);
-        rpc__multiplication__multiply(service, &query, handle_response, &is_done);
-        while (!is_done)
-            protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
+        // send root node
+        send__create_request(service, root_node);
+        printf("root node sent\n");
+        // sleep 3 seconds
+//        sleep(5);
+//        send__create_request(service, data);
+//        printf("data sent\n");
+        // sleep 3 seconds
+        sleep(3);
     }
-    return 0;
 }
+

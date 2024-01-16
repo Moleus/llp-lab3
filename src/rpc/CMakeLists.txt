@@ -34,6 +34,7 @@ foreach (file IN LISTS files)
     )
 endforeach ()
 
+list(APPEND srcs ${CMAKE_CURRENT_SOURCE_DIR}/common.c)
 add_library(my_rpc_lib STATIC ${srcs})
 
 find_package(Protobuf REQUIRED)

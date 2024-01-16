@@ -15,5 +15,6 @@ IF ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
 ENDIF ()
 
 include_directories(include)
+include_directories(${CMAKE_ROOT}/src/common/rpc)
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+add_library(${PROJECT_NAME}_lib STATIC ${SOURCES} ${HEADERS})
