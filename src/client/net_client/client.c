@@ -57,9 +57,9 @@ static void handle_create_response(const Rpc__CreateFileNodeResponse *response, 
 void send__create_request(ProtobufCService *service, CreateFileNodeRequest createFileNode) {
     Rpc__CreateFileNodeRequest query = RPC__CREATE_FILE_NODE_REQUEST__INIT;
     protobuf_c_boolean is_done = 0;
-    Rpc__CreateFileNodeRequest rpc_query_data = convert_to_rpc(createFileNode);
-    query.parent_id = rpc_query_data.parent_id;
-    query.file_info = rpc_query_data.file_info;
+//    Rpc__CreateFileNodeRequest rpc_query_data = convert_to_rpc(createFileNode);
+//    query.parent_id = rpc_query_data.parent_id;
+//    query.file_info = rpc_query_data.file_info;
 
     printf("send__create_request\n");
     rpc__database__create_file_node(service, &query, handle_create_response, &is_done);
