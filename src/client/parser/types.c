@@ -5,7 +5,7 @@ size_t g_malloc_bytes = 0;
 
 void *my_malloc(size_t size) {
     g_malloc_bytes += size;
-    void *ptr = malloc(size);
+    void *ptr = calloc(size, 1);
     return ptr;
 }
 
@@ -35,14 +35,14 @@ Element *create_double(double value) {
 Element *create_string(char *value) {
     Element *el = my_malloc(sizeof(Element));
     el->type = STRING_TYPE;
-    strcpy(el->string, value);
+    el->string = strdup(value);
     return el;
 }
 
 Filter *create_filter(char *attribute, int operator, Element *value) {
     FilterExpr *filter_expr = my_malloc(sizeof(FilterExpr));
     Filter *filter = my_malloc(sizeof(Filter));
-    strcpy(filter_expr->left.name, attribute);
+    filter_expr->left.name = strdup(attribute);
     switch (operator) {
         case 0:
             filter_expr->operation = EQUALS_OP;
@@ -82,7 +82,7 @@ Filter* create_filter_by_var_name(char *var_name) {
     filter->filter = filter_expr;
     filter_expr->right = el;
     el->type = STRING_TYPE;
-    strcpy(filter_expr->right->string, var_name);
+    filter_expr->right->string = strdup(var_name);
     return filter;
 }
 
@@ -100,7 +100,7 @@ FunctionType get_function_type(char *func) {
 
 void add_node(Query *query, char *node) {
     Node *new_node = my_malloc(sizeof(Node));
-    strcpy(new_node->name, node);
+    new_node->name = strdup(node);
 
     Node *cur_node = query->nodes;
     if (cur_node == NULL) {

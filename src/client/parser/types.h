@@ -37,12 +37,12 @@ typedef struct {
         bool boolean;
         int32_t number;
         double double_number;
-        char string[MAX_STRING_SIZE];
+        char *string;
     };
 } Element;
 
 typedef struct {
-    char name[MAX_STRING_SIZE];
+    char *name;
 } FilterTarget;
 
 typedef enum {
@@ -61,7 +61,7 @@ typedef struct {
 
 typedef struct {
     ValueType type;
-    char name[MAX_STRING_SIZE];
+    char *name;
 } Property;
 
 typedef struct Filter {
@@ -77,13 +77,8 @@ typedef enum {
     ASTERISK_PATH,
 } PathType;
 
-typedef struct {
-    char node[MAX_STRING_SIZE];
-    PathType type;
-} Path;
-
 typedef struct Node {
-    char name[MAX_STRING_SIZE];
+    char *name;
     struct Node *next;
     Filter* filters;
 } Node;

@@ -1,3 +1,5 @@
+%parse-param { Query *q }
+
 %code requires {
     #include <stdio.h>
     #include <stdlib.h>
@@ -5,9 +7,8 @@
     #include <stdbool.h>
     #include <stdio.h>
     #include "types.h"
-    extern Query q;
 	int yylex();
-	void yyerror(const char *s);
+void yyerror(Query *q, const char *s);
 }
 
 %union{
@@ -22,7 +23,6 @@
 }
 
 %{
-Query q = {};
 int tab_level = 0;
 %}
 
@@ -48,34 +48,31 @@ int tab_level = 0;
 %type <filter> filter_expr
 %type <filter> filters
 %type <filter> filter
-%type <string> node
+%type <string> identifier
 %type <int_value> compare_op
 %type <el> node_value
 
 %%
 
-query
-    : %empty  /* empty */
-    | query EOL
-    | query node
-    | query node filters
-    | function_call EOL
+query:
+    | operation EOL
     ;
 
-node
-    : SLASH WORD_T {
-        add_node(&q, $2);
-        $$ = $2;
-    }
-    | WORD_T {
-        add_node(&q, $1);
-        $$ = $1;
-    }
+operation: path { printf("Query operation\n"); }
+         | function_call { printf("Function call\n"); }
+         ;
+
+path: identifier { add_node(q, $1); printf("Path1: %s\n", $1); }
+    | path SLASH identifier { add_node(q, $3); printf("Path2: %s\n", $3); }
     ;
+
+identifier: WORD_T
+          | WORD_T filters
+          ;
 
 function_call
-    : function_name LPAREN query RPAREN {
-        q.func = get_function_type($1);
+    : function_name LPAREN path RPAREN {
+        q->func = get_function_type($1);
     }
     ;
 
@@ -83,10 +80,10 @@ function_name : CREATE | UPDATE | DELETE
 
 filters
     : filter {
-        add_filter(&q, $1);
+        add_filter(q, $1);
     }
     | filters filter {
-        add_filter(&q, $2);
+        add_filter(q, $2);
     }
     ;
 
@@ -122,7 +119,7 @@ compare_op: EQUALS_T | NOT_EQUALS_T | LESS_THAN_T | GREATER_THAN_T;
 
 %%
 
-void yyerror(const char *s) {
+void yyerror(Query *q, const char *s) {
     fprintf(stderr, "error: %s\n", s);
 }
 

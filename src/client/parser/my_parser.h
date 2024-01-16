@@ -1,3 +1,3 @@
 #pragma once
 
-Query parse();
+Query *parser_parse_command(char *command);
