@@ -18,7 +18,7 @@ bool node_condition_matches(NodeMatcher *self, Node value) {
     return true;
 }
 
-NodeMatcher *node_condition_new(NodeConditionFunc condition) {
+NodeMatcher *node_matcher_new(NodeConditionFunc condition) {
     NodeMatcher *matcher = my_alloc(sizeof(NodeMatcher) * 1);
     matcher->conditions_count = 1;
     matcher->conditions[0] = condition;
@@ -44,7 +44,7 @@ NodeMatcherArray *node_matcher_array_new(NodeConditionFunc conditions[], int cou
     NodeMatcherArray *array = my_alloc(sizeof(NodeMatcher*) * count + sizeof(NodeMatcherArray));
     array->matchers_count = count;
     for (int i = 0; i < count; i++) {
-        array->matchers[i] = node_condition_new(conditions[i]);
+        array->matchers[i] = node_matcher_new(conditions[i]);
     }
     return array;
 }

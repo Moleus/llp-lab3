@@ -71,3 +71,11 @@ void client_add_node(ClientService *self, CreateNodeRequest *request) {
     while (!is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
+
+void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters) {
+    protobuf_c_boolean is_done = 0;
+    printf("client_get_node_by_filter\n");
+    rpc__database__get_node_by_filter(self->service, filters, handle_create_response, &is_done);
+    while (!is_done)
+        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
+}

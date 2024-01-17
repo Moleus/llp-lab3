@@ -241,6 +241,8 @@ void print_function(FunctionType func) {
         case DELETE_OP:
             printf("delete");
             break;
+        case NOP:
+            break;
     }
 }
 

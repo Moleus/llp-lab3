@@ -50,6 +50,8 @@ Result document_get_all_children(Document *self, GetAllChildrenRequest *request,
 
 Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result);
 
+Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray *matchers, Node *result);
+
 double document_get_insertion_time_ms(void);
 
 double document_get_deletion_time_ms(void);

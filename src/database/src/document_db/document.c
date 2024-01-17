@@ -2,6 +2,7 @@
 #include "private/document_db/document.h"
 #include "private/storage/page_manager.h"
 #include "public/structures.h"
+#include "public/util/memory.h"
 #include <time.h>
 #include <Block.h>
 
@@ -14,6 +15,8 @@ clock_t g_delete_start_time = 0;
 clock_t g_delete_end_time = 0;
 
 Result document_delete_second_step(Document *self, DeleteNodeRequest *request);
+
+NodeConditionFunc node_condition_parent_id_eq(node_id_t node_id);
 
 double document_get_insertion_time_ms(void) {
     double insertion_time = ((double) (g_insert_end_time - g_insert_start_time)) / CLOCKS_PER_SEC * 1000;
@@ -34,9 +37,40 @@ Document *document_new() {
     return document;
 }
 
+CreateNodeRequest get_default_root_node() {
+    return (CreateNodeRequest) {
+            .parent = NULL_NODE_ID,
+            .value = {
+                    .type = FILE_INFO,
+                    .file_info_value = {
+                            .name = "root",
+                            .owner = "root",
+                            .access_time = time(NULL),
+                            .mime_type = "folder"
+                    }
+            }
+    };
+}
+
+void set_root_node(Document *self) {
+    self->root_node = my_alloc(sizeof(Node));
+    NodeMatcher *matcher = node_matcher_new(node_condition_parent_id_eq(ROOT_NODE_ID));
+    Result res = document_get_node_by_condition(self, matcher, self->root_node);
+    if (res.status != RES_OK) {
+        LOG_WARN("Failed to get root node. Using default: %s", res.message);
+        CreateNodeRequest new_node = get_default_root_node();
+        res = document_add_node(self, &new_node, self->root_node);
+        ABORT_IF_FAIL(res, "failed to add root node")
+    }
+    node_matcher_destroy(matcher);
+}
+
 Result document_init(Document *self, const char *file_path, size_t page_size) {
     self->init_done = true;
-    return page_manager_init(self->page_manager, file_path, page_size, FILE_SIGNATURE);
+    Result init = page_manager_init(self->page_manager, file_path, page_size, FILE_SIGNATURE);
+    RETURN_IF_FAIL(init, "failed to init page manager")
+    set_root_node(self);
+    return init;
 }
 
 void document_destroy(Document *self) {
@@ -141,7 +175,7 @@ Result document_add_node(Document *self, CreateNodeRequest *request, Node *resul
 }
 
 // --- DELETE NODE ---
-Result document_delete_node(Document *self, DeleteNodeRequest *request, Node* result) {
+Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *result) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(request)
     assert(self->init_done);
@@ -169,7 +203,7 @@ Result document_delete_node(Document *self, DeleteNodeRequest *request, Node* re
 Result document_delete_second_step(Document *self, DeleteNodeRequest *request) {
     g_delete_start_time = clock();
 
-    ItemIterator* items_it = NULL;
+    ItemIterator *items_it = NULL;
     Item item = {0};
     items_it = page_manager_get_items(self->page_manager, &item);
     // find our node
@@ -193,8 +227,14 @@ Result document_delete_second_step(Document *self, DeleteNodeRequest *request) {
     return ERROR("Node doesn't exist in document tree");
 }
 
+NodeConditionFunc node_condition_parent_id_eq(node_id_t node_id) {
+    return Block_copy(^bool(Node value) {
+        return node_id_eq(value.parent_id, node_id);
+    });
+}
+
 // --- UPDATE NODE ---
-Result document_update_node(Document *self, UpdateNodeRequest *request, Node* result) {
+Result document_update_node(Document *self, UpdateNodeRequest *request, Node *result) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(request)
     assert(self->init_done);
@@ -249,6 +289,13 @@ Result document_add_bulk_nodes(Document *self, CreateMultipleNodesRequest *reque
     item_iterator_destroy(items_it);
     // didn't find parent node
     return ERROR("Parent node doesn't exist in document tree");
+}
+
+Result document_get_all_nodes(Document *self, GetAllChildrenResult *result) {
+    GetAllChildrenRequest request = {
+            .node = self->root_node
+    };
+    return document_get_all_children(self, &request, result);
 }
 
 // --- GET ALL CHILDREN ---
@@ -313,20 +360,13 @@ Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node
     return ERROR("Node doesn't exist in document tree");
 }
 
-// returns closure NodeValueConditionFunc which compares parent_id with provided node_id
-NodeConditionFunc node_condition_parent_id_eq(node_id_t node_id) {
-    return Block_copy(^bool(Node value) {
-        return node_id_eq(value.parent_id, node_id);
-    });
-}
 
 // takes an array of matchers. Applies first on all nodes, then when condition matches, applies second matcher on children of first node, etc
 // until we satisfy the last matcher or none of the matchers match
 // After the node matches the condition, we add new condition that parent is the previous node id
 // when we match we delete the last condition
-Result document_get_node_by_condition_sequence(Document *self, NodeMatcher **matchers, size_t matchers_count, Node *result) {
+Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray *matchers, Node *result) {
     ASSERT_ARG_NOT_NULL(self)
-    ASSERT_ARG_NOT_NULL(matchers)
     ASSERT_ARG_NOT_NULL(result)
     assert(self->init_done);
 
@@ -336,9 +376,10 @@ Result document_get_node_by_condition_sequence(Document *self, NodeMatcher **mat
 
     // TODO: should we start from root or the provided node?
     node_id_t parent_id = ROOT_NODE_ID;
-    
-    for (size_t i = 0; i < matchers_count; i++) {
-        NodeMatcher *matcher = matchers[i];
+
+    for (size_t i = 0; i < matchers->matchers_count; i++) {
+        ASSERT_NOT_NULL(matchers->matchers[i], INTERNAL_LIB_ERROR)
+        NodeMatcher *matcher = matchers->matchers[i];
         // match node where parent_id is the previous node id
         node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
         Result res = document_get_node_by_condition(self, matcher, current_node);

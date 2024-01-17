@@ -20,15 +20,6 @@ typedef struct {
     node_id_t node_id;
 } DeleteNodeRequest;
 
-typedef struct {
-    int path_len;
-    char* names[];
-} names_path_t;
-
-typedef struct {
-   names_path_t names_path;
-} GetNodeByPath;
-
 Rpc__NodeId *convert_node_id_to_rpc(node_id_t node_id);
 
 Rpc__FileInfo *convert_to_rpc_FileInfo(FileInfo file_info);
@@ -54,3 +45,4 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 FileInfo convert_from_rpc_FileInfo(Rpc__FileInfo file_info);
 
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value);
+

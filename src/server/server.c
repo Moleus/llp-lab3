@@ -5,7 +5,6 @@
 #include <signal.h>
 #include "public/util/common.h"
 #include "public/document_db/document.h"
-#include "public/util/node_print.h"
 #include "public/structures.h"
 #include "fs.h"
 #include "public/util/memory.h"
@@ -75,6 +74,22 @@ void handle_delete_node_request(const Rpc__DeleteNodeRequest *request, Rpc__Node
     *response = *convert_to_rpc_Node(*result);
 }
 
+void handle_get_node_by_filter_request(const Rpc__FilterChain *request, Rpc__Node *response) {
+    ASSERT_ARG_NOT_NULL(request)
+    ASSERT_ARG_NOT_NULL(response)
+
+    Node *result = my_alloc(sizeof(Node));
+
+    NodeMatcherArray *matcherArray = fs_new_node_matcher_array(request);
+    Result res = document_get_node_by_condition_sequence(g_document, matcherArray, result);
+    if (res.status != RES_OK) {
+        result->id = NULL_NODE_ID;
+        LOG_WARN("failed to get node by filter: %s", res.message);
+    }
+
+    *response = *convert_to_rpc_Node(*result);
+}
+
 void prefix__create_node(Rpc__Database_Service *service, const Rpc__CreateNodeRequest *input, Rpc__Node_Closure closure, void *closure_data) {
     (void) service;
     Rpc__Node response = RPC__NODE__INIT;
@@ -101,6 +116,14 @@ void prefix__get_node(Rpc__Database_Service *service, const Rpc__NodeId *input, 
     (void) input;
     (void) closure;
     (void) closure_data;
+}
+
+void prefix__get_node_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Node_Closure closure, void *closure_data) {
+    (void) service;
+    LOG_INFO("Received get_node_by_filter request. Filters count: %d", input->n_filters);
+    Rpc__Node response = RPC__NODE__INIT;
+    handle_get_node_by_filter_request(input, &response);
+    closure(&response, closure_data);
 }
 
 static Rpc__Database_Service databaseService = RPC__DATABASE__INIT(prefix__);
@@ -145,7 +168,7 @@ int main() {
 //    test();
 //    return 0;
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
-    const char* filepath = "/tmp/llp-heap-file";
+    const char* filepath = "/tmp/llp-heap-file-2";
     const char *listen_port = "9090";
 
     init_document(filepath, 512);

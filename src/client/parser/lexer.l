@@ -27,7 +27,7 @@
 
 \n { return EOL; }
 
-[a-zA-Z_]* { yylval.string = strdup(yytext); return WORD_T; }
+[a-zA-Z0-9_.]* { yylval.string = strdup(yytext); return WORD_T; }
 ([+-]?[0-9])+           {yylval.int_value = atoi(yytext); return INT_T;}
 [+-]?([0-9]*[.])?[0-9]+ {yylval.double_value = atof(yytext); return DOUBLE_T;}
 

@@ -18,12 +18,12 @@ PROTOBUF_C__BEGIN_DECLS
 typedef struct Rpc__FileInfo Rpc__FileInfo;
 typedef struct Rpc__NodeId Rpc__NodeId;
 typedef struct Rpc__NodeValue Rpc__NodeValue;
+typedef struct Rpc__Filter Rpc__Filter;
+typedef struct Rpc__FilterChain Rpc__FilterChain;
 typedef struct Rpc__Node Rpc__Node;
 typedef struct Rpc__CreateNodeRequest Rpc__CreateNodeRequest;
 typedef struct Rpc__UpdateNodeRequest Rpc__UpdateNodeRequest;
 typedef struct Rpc__DeleteNodeRequest Rpc__DeleteNodeRequest;
-typedef struct Rpc__CreateFileNodeRequest Rpc__CreateFileNodeRequest;
-typedef struct Rpc__CreateFileNodeResponse Rpc__CreateFileNodeResponse;
 
 
 /* --- enums --- */
@@ -36,6 +36,13 @@ typedef enum _Rpc__NodeValue__Type {
   RPC__NODE_VALUE__TYPE__FILE_INFO = 4
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__NODE_VALUE__TYPE)
 } Rpc__NodeValue__Type;
+typedef enum _Rpc__Filter__Type {
+  RPC__FILTER__TYPE__GREATER = 0,
+  RPC__FILTER__TYPE__LESS = 1,
+  RPC__FILTER__TYPE__EQUAL = 2,
+  RPC__FILTER__TYPE__NOT_EQUAL = 3
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__FILTER__TYPE)
+} Rpc__Filter__Type;
 
 /* --- messages --- */
 
@@ -91,6 +98,46 @@ struct  Rpc__NodeValue
 , RPC__NODE_VALUE__TYPE__INT_32, RPC__NODE_VALUE__VALUE__NOT_SET, {0} }
 
 
+typedef enum {
+  RPC__FILTER__ARGUMENT__NOT_SET = 0,
+  RPC__FILTER__ARGUMENT_INT_ARGUMENT = 2,
+  RPC__FILTER__ARGUMENT_DOUBLE_ARGUMENT = 3,
+  RPC__FILTER__ARGUMENT_STRING_ARGUMENT = 4,
+  RPC__FILTER__ARGUMENT_BOOL_ARGUMENT = 5
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__FILTER__ARGUMENT__CASE)
+} Rpc__Filter__ArgumentCase;
+
+/*
+ * Файл будет всегда фильтроваться по имени.
+ */
+struct  Rpc__Filter
+{
+  ProtobufCMessage base;
+  Rpc__Filter__Type type;
+  Rpc__Filter__ArgumentCase argument_case;
+  union {
+    int32_t int_argument;
+    double double_argument;
+    char *string_argument;
+    protobuf_c_boolean bool_argument;
+  };
+};
+#define RPC__FILTER__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__filter__descriptor) \
+, RPC__FILTER__TYPE__GREATER, RPC__FILTER__ARGUMENT__NOT_SET, {0} }
+
+
+struct  Rpc__FilterChain
+{
+  ProtobufCMessage base;
+  size_t n_filters;
+  Rpc__Filter **filters;
+};
+#define RPC__FILTER_CHAIN__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__filter_chain__descriptor) \
+, 0,NULL }
+
+
 struct  Rpc__Node
 {
   ProtobufCMessage base;
@@ -133,27 +180,6 @@ struct  Rpc__DeleteNodeRequest
 };
 #define RPC__DELETE_NODE_REQUEST__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__delete_node_request__descriptor) \
-, NULL }
-
-
-struct  Rpc__CreateFileNodeRequest
-{
-  ProtobufCMessage base;
-  Rpc__FileInfo *file_info;
-  Rpc__NodeId *parent_id;
-};
-#define RPC__CREATE_FILE_NODE_REQUEST__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&rpc__create_file_node_request__descriptor) \
-, NULL, NULL }
-
-
-struct  Rpc__CreateFileNodeResponse
-{
-  ProtobufCMessage base;
-  Rpc__NodeId *node_id;
-};
-#define RPC__CREATE_FILE_NODE_RESPONSE__INIT \
- { PROTOBUF_C_MESSAGE_INIT (&rpc__create_file_node_response__descriptor) \
 , NULL }
 
 
@@ -213,6 +239,44 @@ Rpc__NodeValue *
                       const uint8_t       *data);
 void   rpc__node_value__free_unpacked
                      (Rpc__NodeValue *message,
+                      ProtobufCAllocator *allocator);
+/* Rpc__Filter methods */
+void   rpc__filter__init
+                     (Rpc__Filter         *message);
+size_t rpc__filter__get_packed_size
+                     (const Rpc__Filter   *message);
+size_t rpc__filter__pack
+                     (const Rpc__Filter   *message,
+                      uint8_t             *out);
+size_t rpc__filter__pack_to_buffer
+                     (const Rpc__Filter   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__Filter *
+       rpc__filter__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__filter__free_unpacked
+                     (Rpc__Filter *message,
+                      ProtobufCAllocator *allocator);
+/* Rpc__FilterChain methods */
+void   rpc__filter_chain__init
+                     (Rpc__FilterChain         *message);
+size_t rpc__filter_chain__get_packed_size
+                     (const Rpc__FilterChain   *message);
+size_t rpc__filter_chain__pack
+                     (const Rpc__FilterChain   *message,
+                      uint8_t             *out);
+size_t rpc__filter_chain__pack_to_buffer
+                     (const Rpc__FilterChain   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__FilterChain *
+       rpc__filter_chain__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__filter_chain__free_unpacked
+                     (Rpc__FilterChain *message,
                       ProtobufCAllocator *allocator);
 /* Rpc__Node methods */
 void   rpc__node__init
@@ -290,44 +354,6 @@ Rpc__DeleteNodeRequest *
 void   rpc__delete_node_request__free_unpacked
                      (Rpc__DeleteNodeRequest *message,
                       ProtobufCAllocator *allocator);
-/* Rpc__CreateFileNodeRequest methods */
-void   rpc__create_file_node_request__init
-                     (Rpc__CreateFileNodeRequest         *message);
-size_t rpc__create_file_node_request__get_packed_size
-                     (const Rpc__CreateFileNodeRequest   *message);
-size_t rpc__create_file_node_request__pack
-                     (const Rpc__CreateFileNodeRequest   *message,
-                      uint8_t             *out);
-size_t rpc__create_file_node_request__pack_to_buffer
-                     (const Rpc__CreateFileNodeRequest   *message,
-                      ProtobufCBuffer     *buffer);
-Rpc__CreateFileNodeRequest *
-       rpc__create_file_node_request__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   rpc__create_file_node_request__free_unpacked
-                     (Rpc__CreateFileNodeRequest *message,
-                      ProtobufCAllocator *allocator);
-/* Rpc__CreateFileNodeResponse methods */
-void   rpc__create_file_node_response__init
-                     (Rpc__CreateFileNodeResponse         *message);
-size_t rpc__create_file_node_response__get_packed_size
-                     (const Rpc__CreateFileNodeResponse   *message);
-size_t rpc__create_file_node_response__pack
-                     (const Rpc__CreateFileNodeResponse   *message,
-                      uint8_t             *out);
-size_t rpc__create_file_node_response__pack_to_buffer
-                     (const Rpc__CreateFileNodeResponse   *message,
-                      ProtobufCBuffer     *buffer);
-Rpc__CreateFileNodeResponse *
-       rpc__create_file_node_response__unpack
-                     (ProtobufCAllocator  *allocator,
-                      size_t               len,
-                      const uint8_t       *data);
-void   rpc__create_file_node_response__free_unpacked
-                     (Rpc__CreateFileNodeResponse *message,
-                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Rpc__FileInfo_Closure)
@@ -338,6 +364,12 @@ typedef void (*Rpc__NodeId_Closure)
                   void *closure_data);
 typedef void (*Rpc__NodeValue_Closure)
                  (const Rpc__NodeValue *message,
+                  void *closure_data);
+typedef void (*Rpc__Filter_Closure)
+                 (const Rpc__Filter *message,
+                  void *closure_data);
+typedef void (*Rpc__FilterChain_Closure)
+                 (const Rpc__FilterChain *message,
                   void *closure_data);
 typedef void (*Rpc__Node_Closure)
                  (const Rpc__Node *message,
@@ -350,12 +382,6 @@ typedef void (*Rpc__UpdateNodeRequest_Closure)
                   void *closure_data);
 typedef void (*Rpc__DeleteNodeRequest_Closure)
                  (const Rpc__DeleteNodeRequest *message,
-                  void *closure_data);
-typedef void (*Rpc__CreateFileNodeRequest_Closure)
-                 (const Rpc__CreateFileNodeRequest *message,
-                  void *closure_data);
-typedef void (*Rpc__CreateFileNodeResponse_Closure)
-                 (const Rpc__CreateFileNodeResponse *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -380,6 +406,10 @@ struct Rpc__Database_Service
                    const Rpc__NodeId *input,
                    Rpc__Node_Closure closure,
                    void *closure_data);
+  void (*get_node_by_filter)(Rpc__Database_Service *service,
+                             const Rpc__FilterChain *input,
+                             Rpc__Node_Closure closure,
+                             void *closure_data);
 };
 typedef void (*Rpc__Database_ServiceDestroy)(Rpc__Database_Service *);
 void rpc__database__init (Rpc__Database_Service *service,
@@ -391,7 +421,8 @@ void rpc__database__init (Rpc__Database_Service *service,
       function_prefix__ ## create_node,\
       function_prefix__ ## update_node,\
       function_prefix__ ## delete_node,\
-      function_prefix__ ## get_node  }
+      function_prefix__ ## get_node,\
+      function_prefix__ ## get_node_by_filter  }
 void rpc__database__create_node(ProtobufCService *service,
                                 const Rpc__CreateNodeRequest *input,
                                 Rpc__Node_Closure closure,
@@ -408,6 +439,10 @@ void rpc__database__get_node(ProtobufCService *service,
                              const Rpc__NodeId *input,
                              Rpc__Node_Closure closure,
                              void *closure_data);
+void rpc__database__get_node_by_filter(ProtobufCService *service,
+                                       const Rpc__FilterChain *input,
+                                       Rpc__Node_Closure closure,
+                                       void *closure_data);
 
 /* --- descriptors --- */
 
@@ -415,12 +450,13 @@ extern const ProtobufCMessageDescriptor rpc__file_info__descriptor;
 extern const ProtobufCMessageDescriptor rpc__node_id__descriptor;
 extern const ProtobufCMessageDescriptor rpc__node_value__descriptor;
 extern const ProtobufCEnumDescriptor    rpc__node_value__type__descriptor;
+extern const ProtobufCMessageDescriptor rpc__filter__descriptor;
+extern const ProtobufCEnumDescriptor    rpc__filter__type__descriptor;
+extern const ProtobufCMessageDescriptor rpc__filter_chain__descriptor;
 extern const ProtobufCMessageDescriptor rpc__node__descriptor;
 extern const ProtobufCMessageDescriptor rpc__create_node_request__descriptor;
 extern const ProtobufCMessageDescriptor rpc__update_node_request__descriptor;
 extern const ProtobufCMessageDescriptor rpc__delete_node_request__descriptor;
-extern const ProtobufCMessageDescriptor rpc__create_file_node_request__descriptor;
-extern const ProtobufCMessageDescriptor rpc__create_file_node_response__descriptor;
 extern const ProtobufCServiceDescriptor rpc__database__descriptor;
 
 PROTOBUF_C__END_DECLS

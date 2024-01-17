@@ -56,6 +56,27 @@ message NodeValue {
   }
 }
 
+// Файл будет всегда фильтроваться по имени.
+message Filter {
+  enum Type {
+    GREATER = 0;
+    LESS = 1;
+    EQUAL = 2;
+    NOT_EQUAL = 3;
+  }
+  Type type = 1;
+  oneof argument {
+    int32 int_argument = 2;
+    double double_argument = 3;
+    string string_argument = 4;
+    bool bool_argument = 5;
+  }
+}
+
+message FilterChain {
+  repeated Filter filters = 1;
+}
+
 message Node {
   NodeId id = 1;
   NodeId parent_id = 2;
@@ -77,18 +98,10 @@ message DeleteNodeRequest {
   NodeId id = 1;
 }
 
-message CreateFileNodeRequest {
-  FileInfo file_info = 1;
-  NodeId parent_id = 2;
-}
-
-message CreateFileNodeResponse {
-  NodeId node_id = 1;
-}
-
 service Database {
   rpc CreateNode(CreateNodeRequest) returns (Node);
   rpc UpdateNode(UpdateNodeRequest) returns (Node);
   rpc DeleteNode(DeleteNodeRequest) returns (Node);
   rpc GetNode(NodeId) returns (Node);
+  rpc GetNodeByFilter(FilterChain) returns (Node);
 }

@@ -12,7 +12,7 @@ typedef struct NodeMatcherArray {
     NodeMatcher *matchers[];
 } NodeMatcherArray;
 
-NodeMatcher *node_condition_new(NodeConditionFunc condition);
+NodeMatcher *node_matcher_new(NodeConditionFunc condition);
 
 void node_matcher_destroy(NodeMatcher *self);
 

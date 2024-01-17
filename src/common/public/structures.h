@@ -13,12 +13,14 @@ typedef struct __attribute__((packed)) {
     int32_t page_id;
     int32_t item_id;
 } node_id_t;
+
 typedef struct __attribute((packed)) {
     char* name;
     char* owner;
     uint64_t access_time;
     char* mime_type;
 } FileInfo;
+
 typedef enum __attribute__((packed)) {
     INT_32,
     DOUBLE,
@@ -26,6 +28,7 @@ typedef enum __attribute__((packed)) {
     BOOL,
     FILE_INFO
 } ValueType;
+
 typedef struct __attribute__((packed)) {
     ValueType type;
     union __attribute__((packed)) {
