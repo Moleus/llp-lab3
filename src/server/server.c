@@ -7,6 +7,8 @@
 #include "public/document_db/document.h"
 #include "public/util/node_print.h"
 #include "public/structures.h"
+#include "fs.h"
+#include "public/util/memory.h"
 
 static Document *g_document = NULL;
 
@@ -21,7 +23,7 @@ void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node
 
     printf("parent_id: (%d/%d)\n", node_request.parent.page_id, node_request.parent.item_id);
 
-    Node *result = malloc(sizeof(Node));
+    Node *result = my_alloc(sizeof(Node));
 
     CreateNodeRequest create_node_request = {
         .parent = node_request.parent,
@@ -44,7 +46,7 @@ void handle_update_node_request(const Rpc__UpdateNodeRequest *request, Rpc__Node
 
     UpdateNodeRequest node_request = convert_from_rpc_UpdateNodeRequest(*request);
 
-    Node *result = malloc(sizeof(Node));
+    Node *result = my_alloc(sizeof(Node));
 
     Result res = document_update_node(g_document, &node_request, result);
     if (res.status != RES_OK) {
@@ -62,7 +64,7 @@ void handle_delete_node_request(const Rpc__DeleteNodeRequest *request, Rpc__Node
 
     DeleteNodeRequest node_request = convert_from_rpc_DeleteNodeRequest(*request);
 
-    Node *result = malloc(sizeof(Node));
+    Node *result = my_alloc(sizeof(Node));
 
     Result res = document_delete_node(g_document, &node_request, result);
     if (res.status != RES_OK) {
@@ -112,8 +114,36 @@ void init_document(const char* filepath, size_t page_size) {
     }
 }
 
+// fs_new_file_path_matchers(char *files[], size_t count)
+void test() {
+    char *files[] = {"file1", "file2", "file3", "file4"};
+    Node node = {
+        .id = {
+            .page_id = 1,
+            .item_id = 2
+        },
+        .value = {
+            .type = FILE_INFO,
+            .file_info_value = {
+                .name = "file4",
+                .owner = "owner1",
+                .access_time = 1,
+                .mime_type = "mime1"
+            }
+        }
+    };
+    size_t count = 4;
+    NodeMatcherArray *array = fs_new_file_path_matchers(files, count);
+    for (int i = 0; i < array->matchers_count; ++i) {
+        bool matches = node_condition_matches(array->matchers[i], node);
+        printf("matcher: %d\n", matches);
+    }
+    node_matcher_array_destroy(array);
+}
+
 int main() {
 //    test();
+//    return 0;
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
     const char* filepath = "/tmp/llp-heap-file";
     const char *listen_port = "9090";

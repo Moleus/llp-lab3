@@ -48,7 +48,7 @@ Result document_update_node(Document *self, UpdateNodeRequest *request, Node *re
 
 Result document_get_all_children(Document *self, GetAllChildrenRequest *request, GetAllChildrenResult *result);
 
-Result document_get_node_by_condition(Document *self, NodeValueMatcher *matcher, Node *result);
+Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result);
 
 double document_get_insertion_time_ms(void);
 

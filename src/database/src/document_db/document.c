@@ -3,6 +3,7 @@
 #include "private/storage/page_manager.h"
 #include "public/structures.h"
 #include <time.h>
+#include <Block.h>
 
 #define FILE_SIGNATURE 0x12345678
 
@@ -314,9 +315,9 @@ Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node
 
 // returns closure NodeValueConditionFunc which compares parent_id with provided node_id
 NodeConditionFunc node_condition_parent_id_eq(node_id_t node_id) {
-    NodeConditionFunc condition = ^bool(Node value) {
+    return Block_copy(^bool(Node value) {
         return node_id_eq(value.parent_id, node_id);
-    }
+    });
 }
 
 // takes an array of matchers. Applies first on all nodes, then when condition matches, applies second matcher on children of first node, etc
@@ -338,12 +339,16 @@ Result document_get_node_by_condition_sequence(Document *self, NodeMatcher **mat
     
     for (size_t i = 0; i < matchers_count; i++) {
         NodeMatcher *matcher = matchers[i];
+        // match node where parent_id is the previous node id
         node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
         Result res = document_get_node_by_condition(self, matcher, current_node);
         if (res.status != RES_OK) {
+            LOG_DEBUG("Failed to get node by condition", "");
             free(current_node);
             return res;
         }
+        node_remove_last_condition(matcher);
+        parent_id = current_node->id;
     }
 
     *result = *current_node;
