@@ -98,10 +98,15 @@ message DeleteNodeRequest {
   NodeId id = 1;
 }
 
+message DeletedNodes {
+  int32 count = 1;
+}
+
 service Database {
   rpc CreateNode(CreateNodeRequest) returns (Node);
   rpc UpdateNode(UpdateNodeRequest) returns (Node);
   rpc DeleteNode(DeleteNodeRequest) returns (Node);
   rpc GetNode(NodeId) returns (Node);
   rpc GetNodeByFilter(FilterChain) returns (Node);
+  rpc DeleteNodesByFilter(FilterChain) returns (DeletedNodes);
 }

@@ -89,6 +89,23 @@ void handle_get_node_by_filter_request(const Rpc__FilterChain *request, Rpc__Nod
     *response = *convert_to_rpc_Node(*result);
 }
 
+void handle_delete_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__DeletedNodes *response) {
+    // ignore request filter chain
+    ASSERT_ARG_NOT_NULL(response)
+
+    int deleted_count = 0;
+    NodeMatcher *all_matcher = node_matcher_new(node_condition_all());
+    Result res = document_delete_nodes_by_condition(g_document, all_matcher, &deleted_count);
+    node_matcher_destroy(all_matcher);
+    if (res.status != RES_OK) {
+        LOG_WARN("[handler] failed to delete nodes by filter: %s", res.message);
+    }
+    LOG_INFO("[handler] deleted nodes count: %d", deleted_count);
+    Rpc__DeletedNodes tmp_result = RPC__DELETED_NODES__INIT;
+    tmp_result.count = deleted_count;
+    *response = tmp_result;
+}
+
 void prefix__create_node(Rpc__Database_Service *service, const Rpc__CreateNodeRequest *input, Rpc__Node_Closure closure, void *closure_data) {
     (void) service;
     Rpc__Node response = RPC__NODE__INIT;
@@ -122,6 +139,14 @@ void prefix__get_node_by_filter(Rpc__Database_Service *service, const Rpc__Filte
     LOG_INFO("[rpc__node_by_filter] Received get_node_by_filter request. Filters count: %d", input->n_filters);
     Rpc__Node response = RPC__NODE__INIT;
     handle_get_node_by_filter_request(input, &response);
+    closure(&response, closure_data);
+}
+
+void prefix__delete_nodes_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__DeletedNodes_Closure closure, void *closure_data) {
+    (void) service;
+    LOG_INFO("[rpc__node_by_filter] Received delete_nodes_by_filter request. Filters count: %d", input->n_filters);
+    Rpc__DeletedNodes response = RPC__DELETED_NODES__INIT;
+    handle_delete_nodes_by_filter_request(input, &response);
     closure(&response, closure_data);
 }
 
@@ -168,7 +193,7 @@ int main() {
 //    return 0;
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
     const char* filepath = "/tmp/llp-heap-file-9";
-    const char *listen_port = "9091";
+    const char *listen_port = "9092";
 
     remove(filepath);
 

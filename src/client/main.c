@@ -8,29 +8,6 @@
 
 unsigned char log_level = DEBUG;
 
-// Convert Query to CreateNodeRequest/UpdateNodeRequest/DeleteNodeRequest
-//void convert_query_to_request(Query *query) {
-//    void* handler = client_get_node;
-//    switch (query->func) {
-//        case CREATE_OP:
-//            handler = client_add_node;
-//            break;
-//        case UPDATE_OP:
-//            handler = client_update_node;
-//            break;
-//        case DELETE_OP:
-//            handler = client_delete_node;
-//            break;
-//        case NOP:
-//            handler = client_get_node;
-//            break;
-//        default:
-//            LOG_ERR("Unknown function type: %d", query->func);
-//            exit(1);
-//    }
-//    ParsedNode *node = query->nodes;
-//}
-
 // takes last node from path
 Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
     ParsedNode *last_node = nodes;
@@ -59,7 +36,7 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
 // read from input using parser
 // then call net_client functions based on the query
 int main(int argc, char **argv) {
-    char *address = "127.0.0.1:9091";
+    char *address = "127.0.0.1:9092";
 
     char *command = "test.txt\n";
     Query *q = parser_parse_command(command);
@@ -86,6 +63,9 @@ int main(int argc, char **argv) {
             .item_id = -1
 
     };
+
+    client_delete_all_nodes(service);
+
     client_add_node(service, &root);
     for (;;) {
 //        Query query = parse();

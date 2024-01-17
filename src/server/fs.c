@@ -33,14 +33,6 @@ NodeConditionFunc fs_new_filename_condition(char *expected_filename) {
     });
 }
 
-NodeConditionFunc fs_new_owner_condition(char *owner) {
-    return Block_copy( ^bool(Node node) {
-        char *file = strdup(owner);
-        return strcmp(node.value.file_info_value.owner, file) == 0;
-    });
-}
-
-
 // converts FilterChain to NodeMatcherArray
 NodeMatcherArray *fs_new_node_matcher_array(const Rpc__FilterChain *filter_chain) {
     NodeConditionFunc conditions[filter_chain->n_filters];

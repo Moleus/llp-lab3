@@ -22,8 +22,6 @@ typedef struct {
 
 Rpc__NodeId *convert_node_id_to_rpc(node_id_t node_id);
 
-Rpc__FileInfo *convert_to_rpc_FileInfo(FileInfo file_info);
-
 Rpc__CreateNodeRequest *convert_to_rpc_CreateNodeRequest(CreateNodeRequest request);
 
 Rpc__UpdateNodeRequest *convert_to_rpc_UpdateNodeRequest(UpdateNodeRequest request);
@@ -41,8 +39,6 @@ CreateNodeRequest convert_from_rpc_CreateNodeRequest(Rpc__CreateNodeRequest requ
 UpdateNodeRequest convert_from_rpc_UpdateNodeRequest(Rpc__UpdateNodeRequest request);
 
 DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest request);
-
-FileInfo convert_from_rpc_FileInfo(Rpc__FileInfo file_info);
 
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value);
 

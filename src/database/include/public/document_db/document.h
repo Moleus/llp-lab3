@@ -57,3 +57,9 @@ Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray 
 double document_get_insertion_time_ms(void);
 
 double document_get_deletion_time_ms(void);
+
+Result document_delete_all_nodes(Document *self, int*deleted_count);
+
+Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, int *deleted_count);
+
+NodeConditionFunc node_condition_all(void);

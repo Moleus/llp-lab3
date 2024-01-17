@@ -12,6 +12,8 @@ void client_update_node(ClientService *self, UpdateNodeRequest *request);
 
 void client_delete_node(ClientService *self, DeleteNodeRequest *request);
 
+void client_delete_all_nodes(ClientService *self);
+
 void client_get_node(ClientService *self, node_id_t *request);
 
 void client_get_all(ClientService *self);

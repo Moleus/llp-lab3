@@ -160,6 +160,45 @@ Result document_add_node(Document *self, CreateNodeRequest *request, Node *resul
     }
 }
 
+NodeConditionFunc node_condition_all(void) {
+    return Block_copy(^bool(Node value) {
+        return true;
+    });
+}
+
+//Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
+Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, int *deleted_count) {
+    ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(matcher)
+    ASSERT_ARG_NOT_NULL(deleted_count)
+    assert(self->init_done);
+
+    GetAllChildrenResult all_children_result = {0};
+    Result res = document_get_all_nodes(self, &all_children_result);
+    RETURN_IF_FAIL(res, "failed to get all nodes")
+
+    for (size_t i = 0; i < all_children_result.count; i++) {
+        Node *node = &all_children_result.nodes[i];
+        if (node_condition_matches(matcher, *node)) {
+            DeleteNodeRequest delete_request = {
+                    .node_id = node->id
+            };
+            Node result = {0};
+            res = document_delete_node(self, &delete_request, &result);
+            RETURN_IF_FAIL(res, "failed to delete node")
+            (*deleted_count)++;
+        }
+    }
+    return OK;
+}
+
+Result document_delete_all_nodes(Document *self, int*deleted_count) {
+    NodeMatcher *all_matcher = node_matcher_new(node_condition_all());
+    Result res = document_delete_nodes_by_condition(self, all_matcher, deleted_count);
+    node_matcher_destroy(all_matcher);
+    return res;
+}
+
 // --- DELETE NODE ---
 Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *result) {
     ASSERT_ARG_NOT_NULL(self)

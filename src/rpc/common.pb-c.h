@@ -24,6 +24,7 @@ typedef struct Rpc__Node Rpc__Node;
 typedef struct Rpc__CreateNodeRequest Rpc__CreateNodeRequest;
 typedef struct Rpc__UpdateNodeRequest Rpc__UpdateNodeRequest;
 typedef struct Rpc__DeleteNodeRequest Rpc__DeleteNodeRequest;
+typedef struct Rpc__DeletedNodes Rpc__DeletedNodes;
 
 
 /* --- enums --- */
@@ -181,6 +182,16 @@ struct  Rpc__DeleteNodeRequest
 #define RPC__DELETE_NODE_REQUEST__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__delete_node_request__descriptor) \
 , NULL }
+
+
+struct  Rpc__DeletedNodes
+{
+  ProtobufCMessage base;
+  int32_t count;
+};
+#define RPC__DELETED_NODES__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__deleted_nodes__descriptor) \
+, 0 }
 
 
 /* Rpc__FileInfo methods */
@@ -354,6 +365,25 @@ Rpc__DeleteNodeRequest *
 void   rpc__delete_node_request__free_unpacked
                      (Rpc__DeleteNodeRequest *message,
                       ProtobufCAllocator *allocator);
+/* Rpc__DeletedNodes methods */
+void   rpc__deleted_nodes__init
+                     (Rpc__DeletedNodes         *message);
+size_t rpc__deleted_nodes__get_packed_size
+                     (const Rpc__DeletedNodes   *message);
+size_t rpc__deleted_nodes__pack
+                     (const Rpc__DeletedNodes   *message,
+                      uint8_t             *out);
+size_t rpc__deleted_nodes__pack_to_buffer
+                     (const Rpc__DeletedNodes   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__DeletedNodes *
+       rpc__deleted_nodes__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__deleted_nodes__free_unpacked
+                     (Rpc__DeletedNodes *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Rpc__FileInfo_Closure)
@@ -383,6 +413,9 @@ typedef void (*Rpc__UpdateNodeRequest_Closure)
 typedef void (*Rpc__DeleteNodeRequest_Closure)
                  (const Rpc__DeleteNodeRequest *message,
                   void *closure_data);
+typedef void (*Rpc__DeletedNodes_Closure)
+                 (const Rpc__DeletedNodes *message,
+                  void *closure_data);
 
 /* --- services --- */
 
@@ -410,6 +443,10 @@ struct Rpc__Database_Service
                              const Rpc__FilterChain *input,
                              Rpc__Node_Closure closure,
                              void *closure_data);
+  void (*delete_nodes_by_filter)(Rpc__Database_Service *service,
+                                 const Rpc__FilterChain *input,
+                                 Rpc__DeletedNodes_Closure closure,
+                                 void *closure_data);
 };
 typedef void (*Rpc__Database_ServiceDestroy)(Rpc__Database_Service *);
 void rpc__database__init (Rpc__Database_Service *service,
@@ -422,7 +459,8 @@ void rpc__database__init (Rpc__Database_Service *service,
       function_prefix__ ## update_node,\
       function_prefix__ ## delete_node,\
       function_prefix__ ## get_node,\
-      function_prefix__ ## get_node_by_filter  }
+      function_prefix__ ## get_node_by_filter,\
+      function_prefix__ ## delete_nodes_by_filter  }
 void rpc__database__create_node(ProtobufCService *service,
                                 const Rpc__CreateNodeRequest *input,
                                 Rpc__Node_Closure closure,
@@ -443,6 +481,10 @@ void rpc__database__get_node_by_filter(ProtobufCService *service,
                                        const Rpc__FilterChain *input,
                                        Rpc__Node_Closure closure,
                                        void *closure_data);
+void rpc__database__delete_nodes_by_filter(ProtobufCService *service,
+                                           const Rpc__FilterChain *input,
+                                           Rpc__DeletedNodes_Closure closure,
+                                           void *closure_data);
 
 /* --- descriptors --- */
 
@@ -457,6 +499,7 @@ extern const ProtobufCMessageDescriptor rpc__node__descriptor;
 extern const ProtobufCMessageDescriptor rpc__create_node_request__descriptor;
 extern const ProtobufCMessageDescriptor rpc__update_node_request__descriptor;
 extern const ProtobufCMessageDescriptor rpc__delete_node_request__descriptor;
+extern const ProtobufCMessageDescriptor rpc__deleted_nodes__descriptor;
 extern const ProtobufCServiceDescriptor rpc__database__descriptor;
 
 PROTOBUF_C__END_DECLS

@@ -66,6 +66,16 @@ static void handle_create_response(const Rpc__Node *response, void *closure_data
     *(protobuf_c_boolean *) closure_data = 1;
 }
 
+static void handle_delete_nodes_response(const Rpc__DeletedNodes *response, void *closure_data) {
+    printf("handle_delete_nodes_response\n");
+    if (response == NULL) {
+        printf("Error processing request.\n");
+    } else {
+        printf("Deleted nodes: %d\n", response->count);
+    }
+    *(protobuf_c_boolean *) closure_data = 1;
+}
+
 void client_add_node(ClientService *self, CreateNodeRequest *request) {
     protobuf_c_boolean is_done = 0;
     Rpc__CreateNodeRequest *query = convert_to_rpc_CreateNodeRequest(*request);
@@ -80,6 +90,15 @@ void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters) {
     protobuf_c_boolean is_done = 0;
     printf("client_get_node_by_filter\n");
     rpc__database__get_node_by_filter(self->service, filters, handle_create_response, &is_done);
+    while (!is_done)
+        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
+}
+
+void client_delete_all_nodes(ClientService *self) {
+    protobuf_c_boolean is_done = 0;
+    printf("client_delete_all_nodes\n");
+    Rpc__FilterChain chain = RPC__FILTER_CHAIN__INIT;
+    rpc__database__delete_nodes_by_filter(self->service, &chain, handle_delete_nodes_response, &is_done);
     while (!is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }

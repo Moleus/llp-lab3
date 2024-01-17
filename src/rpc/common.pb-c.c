@@ -412,6 +412,51 @@ void   rpc__delete_node_request__free_unpacked
   assert(message->base.descriptor == &rpc__delete_node_request__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   rpc__deleted_nodes__init
+                     (Rpc__DeletedNodes         *message)
+{
+  static const Rpc__DeletedNodes init_value = RPC__DELETED_NODES__INIT;
+  *message = init_value;
+}
+size_t rpc__deleted_nodes__get_packed_size
+                     (const Rpc__DeletedNodes *message)
+{
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t rpc__deleted_nodes__pack
+                     (const Rpc__DeletedNodes *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t rpc__deleted_nodes__pack_to_buffer
+                     (const Rpc__DeletedNodes *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Rpc__DeletedNodes *
+       rpc__deleted_nodes__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Rpc__DeletedNodes *)
+     protobuf_c_message_unpack (&rpc__deleted_nodes__descriptor,
+                                allocator, len, data);
+}
+void   rpc__deleted_nodes__free_unpacked
+                     (Rpc__DeletedNodes *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 static const ProtobufCFieldDescriptor rpc__file_info__field_descriptors[4] =
 {
   {
@@ -1054,17 +1099,57 @@ const ProtobufCMessageDescriptor rpc__delete_node_request__descriptor =
   (ProtobufCMessageInit) rpc__delete_node_request__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCMethodDescriptor rpc__database__method_descriptors[5] =
+static const ProtobufCFieldDescriptor rpc__deleted_nodes__field_descriptors[1] =
+{
+  {
+    "count",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    offsetof(Rpc__DeletedNodes, count),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned rpc__deleted_nodes__field_indices_by_name[] = {
+  0,   /* field[0] = count */
+};
+static const ProtobufCIntRange rpc__deleted_nodes__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor rpc__deleted_nodes__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "Rpc.DeletedNodes",
+  "DeletedNodes",
+  "Rpc__DeletedNodes",
+  "Rpc",
+  sizeof(Rpc__DeletedNodes),
+  1,
+  rpc__deleted_nodes__field_descriptors,
+  rpc__deleted_nodes__field_indices_by_name,
+  1,  rpc__deleted_nodes__number_ranges,
+  (ProtobufCMessageInit) rpc__deleted_nodes__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCMethodDescriptor rpc__database__method_descriptors[6] =
 {
   { "CreateNode", &rpc__create_node_request__descriptor, &rpc__node__descriptor },
   { "UpdateNode", &rpc__update_node_request__descriptor, &rpc__node__descriptor },
   { "DeleteNode", &rpc__delete_node_request__descriptor, &rpc__node__descriptor },
   { "GetNode", &rpc__node_id__descriptor, &rpc__node__descriptor },
   { "GetNodeByFilter", &rpc__filter_chain__descriptor, &rpc__node__descriptor },
+  { "DeleteNodesByFilter", &rpc__filter_chain__descriptor, &rpc__deleted_nodes__descriptor },
 };
 const unsigned rpc__database__method_indices_by_name[] = {
   0,        /* CreateNode */
   2,        /* DeleteNode */
+  5,        /* DeleteNodesByFilter */
   3,        /* GetNode */
   4,        /* GetNodeByFilter */
   1         /* UpdateNode */
@@ -1076,7 +1161,7 @@ const ProtobufCServiceDescriptor rpc__database__descriptor =
   "Database",
   "Rpc__Database",
   "Rpc",
-  5,
+  6,
   rpc__database__method_descriptors,
   rpc__database__method_indices_by_name
 };
@@ -1119,6 +1204,14 @@ void rpc__database__get_node_by_filter(ProtobufCService *service,
 {
   assert(service->descriptor == &rpc__database__descriptor);
   service->invoke(service, 4, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
+}
+void rpc__database__delete_nodes_by_filter(ProtobufCService *service,
+                                           const Rpc__FilterChain *input,
+                                           Rpc__DeletedNodes_Closure closure,
+                                           void *closure_data)
+{
+  assert(service->descriptor == &rpc__database__descriptor);
+  service->invoke(service, 5, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
 void rpc__database__init (Rpc__Database_Service *service,
                           Rpc__Database_ServiceDestroy destroy)

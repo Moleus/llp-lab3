@@ -79,10 +79,6 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
             tmp_result.bool_value = value.bool_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_BOOL_VALUE;
             break;
-        case FILE_INFO:
-            tmp_result.file_info_value = convert_to_rpc_FileInfo(value.file_info_value);
-            tmp_result.value_case = RPC__NODE_VALUE__VALUE_FILE_INFO_VALUE;
-            break;
         default:
             LOG_ERR("Unknown type: %d", value.type);
             exit(1);
@@ -141,33 +137,9 @@ NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
         case BOOL:
             result.bool_value = value.bool_value;
             break;
-        case FILE_INFO:
-            result.file_info_value = convert_from_rpc_FileInfo(*value.file_info_value);
-            break;
         default:
             LOG_ERR("Unknown type: %d", value.type);
             exit(1);
     }
-    return result;
-}
-
-Rpc__FileInfo *convert_to_rpc_FileInfo(FileInfo file_info) {
-    Rpc__FileInfo *rpc_file_info = malloc(sizeof(Rpc__FileInfo));
-    Rpc__FileInfo result = RPC__FILE_INFO__INIT;
-    result.name = file_info.name;
-    result.owner = file_info.owner;
-    result.access_time = file_info.access_time;
-    result.mime_type = file_info.mime_type;
-    *rpc_file_info = result;
-    return rpc_file_info;
-}
-
-FileInfo convert_from_rpc_FileInfo(Rpc__FileInfo file_info) {
-    FileInfo result = {
-            .name = file_info.name,
-            .owner = file_info.owner,
-            .access_time = file_info.access_time,
-            .mime_type = file_info.mime_type
-    };
     return result;
 }
