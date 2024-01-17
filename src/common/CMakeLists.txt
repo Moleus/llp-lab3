@@ -6,10 +6,10 @@
 project(common C)
 
 # Define the library
-add_library(common_lib STATIC public/util/memory.c)
+add_library(common_lib STATIC public/util/memory.c public/structures.c)
 
 # Specify the include directories for the library
-target_include_directories(common_lib INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(common_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add any source files or other dependencies if needed
 # For example:

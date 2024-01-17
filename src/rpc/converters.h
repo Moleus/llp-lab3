@@ -6,8 +6,8 @@
 #include "public/structures.h"
 
 typedef struct {
-    NodeValue value;
     node_id_t parent;
+    NodeValue value;
 } CreateNodeRequest;
 
 typedef struct {

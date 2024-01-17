@@ -87,7 +87,6 @@ bool item_iterator_has_next(ItemIterator *self) {
     // нужно загрузить следующую страницу и проверить, что кол-во элементов в ней больше 0
     // надо проверять следующие страницы, пока не найдем страницу с элементами или кол-во страниц не закончится
     // Также, нужно проверить, что элемент - это НЕ продолжение предыдущего элемента
-    LOG_DEBUG("ItemIterator - checking next page %d", self->page_iterator->next_page_id.id);
     while (page_iterator_has_next(self->page_iterator)) {
         cur_page = NULL;
         Result res = page_iterator_next(self->page_iterator, &cur_page);
@@ -138,7 +137,6 @@ void item_iterator_free_payloads(ItemIterator *self) {
         free(allocated_payload);
         allocated_payload = next;
     }
-    LOG_DEBUG("ItemIterator - freed %d payloads. Count was %d", i, self->allocated_payloads_count);
     self->allocated_payloads_count = 0;
     self->allocated_payloads = NULL;
 }

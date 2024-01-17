@@ -61,7 +61,7 @@ Result page_manager_read_page(PageManager *self, page_index_t id, Page **result_
     // NOTE: здесь мы выдаем ошибку, если страницы не существует.
     uint32_t pages_count = page_manager_get_pages_count(self);
     if (id.id >= (int32_t) pages_count) {
-        LOG_ERR("Page %d doesn't exist. Total pages: %d", id.id, pages_count);
+        LOG_ERR("[read_page] Page %d doesn't exist. Total pages: %d", id.id, pages_count);
         ABORT_EXIT(INTERNAL_LIB_ERROR, "Page doesn't exist")
     }
     Result res;
@@ -69,7 +69,7 @@ Result page_manager_read_page(PageManager *self, page_index_t id, Page **result_
     // check if page exists in ram
     res = page_manager_get_page_from_ram(self, id, result_page);
     if (res.status == RES_OK) {
-        LOG_INFO("Page %d found in ram", id.id);
+        LOG_INFO("[read_page] Page %d found in ram", id.id);
         // page found in ram
         return OK;
     }
@@ -82,9 +82,9 @@ Result page_manager_read_page(PageManager *self, page_index_t id, Page **result_
     // read header
     uint32_t page_size = page_manager_get_page_size(self);
     res = file_manager_read(self->file_manager, page_offset_in_file, page_size, page);
-    RETURN_IF_FAIL(res, "Failed to read page header from file")
+    RETURN_IF_FAIL(res, "[read_page] Failed to read page header from file")
     // read payload
-    LOG_DEBUG("Read page %d. Offset: %08X, items count: %d, free space: %d", id.id,
+    LOG_DEBUG("[read_page] Read page %d. Offset: %08X, items count: %d, free space: %d", id.id,
               page_offset_in_file, page->page_header.items_count,
               page->page_header.free_space_end_offset - page->page_header.free_space_start_offset);
 

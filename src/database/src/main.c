@@ -5,16 +5,18 @@
 unsigned char log_level = DEBUG;
 
 int process_document(void) {// create document.
-    CreateNodeRequest string_req = {
+    char *data = "hello";
+    CreateNodeRequest *string_req = malloc(sizeof(CreateNodeRequest) + strlen(data) + 1);
+    *string_req = (CreateNodeRequest){
         .parent = NULL_NODE_ID,
         .value = (NodeValue) {
             .type = STRING,
             .string_value = (String) {
-                .value = "hello",
                 .length = 5
             }
         },
     };
+    strcpy(string_req->value.string_value.value, data);
     Document *doc = document_new();
     const char* filepath = "/tmp/llp-heap-file";
     remove(filepath);

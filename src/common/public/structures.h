@@ -5,8 +5,8 @@
 #include "public/structures.h"
 
 typedef struct __attribute__((packed)) {
-    const char *value;
     uint32_t length;
+    char value[];
 } String;
 
 typedef struct __attribute__((packed)) {
@@ -44,3 +44,6 @@ typedef struct __attribute__((packed)) {
     node_id_t parent_id;
     NodeValue value;
 } Node;
+
+NodeValue *node_value_string_new(char *string);
+Node *node_string_new(char *string);

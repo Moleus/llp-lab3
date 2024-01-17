@@ -19,4 +19,4 @@ ENDIF ()
 
 add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
-target_link_libraries(${PROJECT_NAME}_lib LINK_PUBLIC common_lib)
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC common_lib)

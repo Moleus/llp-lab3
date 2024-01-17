@@ -125,8 +125,6 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 }
 
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
-//    assert((ValueType) value.type == (ValueType) value.value_case);
-
     NodeValue result = {
             .type = (ValueType) value.type
     };
@@ -138,9 +136,7 @@ NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
             result.double_value = value.double_value;
             break;
         case STRING:
-            result.string_value = (String) {
-                    .value = value.string_value
-            };
+            result = *node_value_string_new(value.string_value);
             break;
         case BOOL:
             result.bool_value = value.bool_value;

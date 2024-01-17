@@ -31,7 +31,6 @@ void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node
     Result res = document_add_node(g_document, &create_node_request, result);
     if (res.status != RES_OK) {
         LOG_ERR("failed to add node: %s", res.message);
-        exit(1);
     }
     // TODO: pointer or value? is it initialized?
     *response = *convert_to_rpc_Node(*result);
@@ -84,7 +83,7 @@ void handle_get_node_by_filter_request(const Rpc__FilterChain *request, Rpc__Nod
     Result res = document_get_node_by_condition_sequence(g_document, matcherArray, result);
     if (res.status != RES_OK) {
         result->id = NULL_NODE_ID;
-        LOG_WARN("failed to get node by filter: %s", res.message);
+        LOG_WARN("[handler] failed to get node by filter: %s", res.message);
     }
 
     *response = *convert_to_rpc_Node(*result);
@@ -120,7 +119,7 @@ void prefix__get_node(Rpc__Database_Service *service, const Rpc__NodeId *input, 
 
 void prefix__get_node_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Node_Closure closure, void *closure_data) {
     (void) service;
-    LOG_INFO("Received get_node_by_filter request. Filters count: %d", input->n_filters);
+    LOG_INFO("[rpc__node_by_filter] Received get_node_by_filter request. Filters count: %d", input->n_filters);
     Rpc__Node response = RPC__NODE__INIT;
     handle_get_node_by_filter_request(input, &response);
     closure(&response, closure_data);
@@ -138,38 +137,40 @@ void init_document(const char* filepath, size_t page_size) {
 }
 
 // fs_new_file_path_matchers(char *files[], size_t count)
-void test() {
-    char *files[] = {"file1", "file2", "file3", "file4"};
-    Node node = {
-        .id = {
-            .page_id = 1,
-            .item_id = 2
-        },
-        .value = {
-            .type = FILE_INFO,
-            .file_info_value = {
-                .name = "file4",
-                .owner = "owner1",
-                .access_time = 1,
-                .mime_type = "mime1"
-            }
-        }
-    };
-    size_t count = 4;
-    NodeMatcherArray *array = fs_new_file_path_matchers(files, count);
-    for (int i = 0; i < array->matchers_count; ++i) {
-        bool matches = node_condition_matches(array->matchers[i], node);
-        printf("matcher: %d\n", matches);
-    }
-    node_matcher_array_destroy(array);
-}
+//void test() {
+//    char *files[] = {"file1", "file2", "file3", "file4"};
+//    Node node = {
+//        .id = {
+//            .page_id = 1,
+//            .item_id = 2
+//        },
+//        .value = {
+//            .type = FILE_INFO,
+//            .file_info_value = {
+//                .name = "file4",
+//                .owner = "owner1",
+//                .access_time = 1,
+//                .mime_type = "mime1"
+//            }
+//        }
+//    };
+//    int count = 4;
+//    NodeMatcherArray *array = fs_new_file_path_matchers(files, count);
+//    for (int i = 0; i < array->matchers_count; ++i) {
+//        bool matches = node_condition_matches(array->matchers[i], node);
+//        printf("matcher: %d\n", matches);
+//    }
+//    node_matcher_array_destroy(array);
+//}
 
 int main() {
 //    test();
 //    return 0;
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
-    const char* filepath = "/tmp/llp-heap-file-2";
-    const char *listen_port = "9090";
+    const char* filepath = "/tmp/llp-heap-file-9";
+    const char *listen_port = "9091";
+
+    remove(filepath);
 
     init_document(filepath, 512);
 

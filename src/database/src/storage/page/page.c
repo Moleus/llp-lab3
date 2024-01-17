@@ -10,7 +10,7 @@ Page *page_new(page_index_t page_id, uint32_t page_size) {
     Page *result = calloc(1, page_size);
     ASSERT_NOT_NULL(result, FAILED_TO_ALLOCATE_MEMORY)
 
-    LOG_DEBUG("Allocated page with id %d, size: %d", page_id.id, page_size);
+    LOG_DEBUG("[page_new] Allocated page with id %d, size: %d", page_id.id, page_size);
 
     PageHeader header = {
             .page_id = page_id,

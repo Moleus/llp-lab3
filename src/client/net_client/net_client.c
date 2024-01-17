@@ -58,6 +58,10 @@ static void handle_create_response(const Rpc__Node *response, void *closure_data
     } else {
         node_id_t node_id = convert_from_rpc_nodeId(response->id);
         printf("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
+        if (node_id.item_id != -1) {
+            Rpc__NodeValue *nodeValue = response->value;
+            printf("Data: %s\n", nodeValue->string_value);
+        }
     }
     *(protobuf_c_boolean *) closure_data = 1;
 }

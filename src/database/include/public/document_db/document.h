@@ -24,7 +24,7 @@ typedef struct {
 } CreateMultipleNodesResult;
 
 typedef struct {
-    Node *node;
+    node_id_t parent;
 } GetAllChildrenRequest;
 
 typedef struct {
@@ -47,6 +47,8 @@ Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *re
 Result document_update_node(Document *self, UpdateNodeRequest *request, Node *result);
 
 Result document_get_all_children(Document *self, GetAllChildrenRequest *request, GetAllChildrenResult *result);
+
+Result document_get_all_nodes(Document *self, GetAllChildrenResult *result);
 
 Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result);
 
