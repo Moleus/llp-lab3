@@ -21,14 +21,12 @@ NodeMatcherArray *fs_new_file_path_matchers(char *files[], int count) {
 
 NodeConditionFunc fs_new_filename_condition(char *expected_filename) {
     return Block_copy( ^bool(Node node) {
-        if (node.value.type != STRING) {
-            return false;
-        }
+        assert(node.value.type == STRING);
         assert(node.value.string_value.value != NULL);
         assert(strlen(node.value.string_value.value) > 0);
-        LOG_DEBUG("[fs_new_filename_condition] expected_filename: %s. Actual %.*s", expected_filename, node.value.string_value.length, node.value.string_value.value);
         // extract first word from string_value (split by space)
         char *filename = strtok(node.value.string_value.value, " ");
+        LOG_WARN("[fs_new_filename_condition] expected_filename: %s. Actual %s", expected_filename, filename);
         return strcmp(filename, expected_filename) == 0;
     });
 }

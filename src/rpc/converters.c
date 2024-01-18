@@ -3,6 +3,7 @@
 #include "common.pb-c.h"
 #include "public/util/common.h"
 #include "public/structures.h"
+#include "public/util/memory.h"
 
 
 node_id_t convert_from_rpc_nodeId(Rpc__NodeId *node_id) {
@@ -72,7 +73,8 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_DOUBLE_VALUE;
             break;
         case STRING:
-            tmp_result.string_value = strdup(value.string_value.value);
+            tmp_result.string_value = my_alloc(sizeof(char*) * (value.string_value.length + 1));
+            strcpy(tmp_result.string_value, value.string_value.value);
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_STRING_VALUE;
             break;
         case BOOL:
@@ -132,7 +134,7 @@ NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
             result.double_value = value.double_value;
             break;
         case STRING:
-            result = *node_value_string_new(value.string_value);
+            result = node_value_string_new(value.string_value);
             break;
         case BOOL:
             result.bool_value = value.bool_value;

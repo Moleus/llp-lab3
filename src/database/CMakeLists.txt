@@ -14,7 +14,6 @@ IF ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
     add_compile_definitions(WINDOWS)
 ENDIF ()
 
-
 # todo: removed rpc include
 
 add_library(${PROJECT_NAME}_lib STATIC ${SOURCES})

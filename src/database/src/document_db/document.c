@@ -173,12 +173,12 @@ Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, 
     ASSERT_ARG_NOT_NULL(deleted_count)
     assert(self->init_done);
 
-    GetAllChildrenResult all_children_result = {0};
-    Result res = document_get_all_nodes(self, &all_children_result);
+    GetAllChildrenResult *all_children_result = my_alloc(sizeof(GetAllChildrenResult) + sizeof(Node) * 1000);
+    Result res = document_get_all_nodes(self, all_children_result);
     RETURN_IF_FAIL(res, "failed to get all nodes")
 
-    for (size_t i = 0; i < all_children_result.count; i++) {
-        Node *node = &all_children_result.nodes[i];
+    for (size_t i = 0; i < all_children_result->count; i++) {
+        Node *node = &all_children_result->nodes[i];
         if (node_condition_matches(matcher, *node)) {
             DeleteNodeRequest delete_request = {
                     .node_id = node->id
@@ -189,6 +189,7 @@ Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, 
             (*deleted_count)++;
         }
     }
+    free(all_children_result);
     return OK;
 }
 

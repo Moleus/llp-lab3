@@ -6,7 +6,7 @@
 
 typedef struct __attribute__((packed)) {
     uint32_t length;
-    char value[];
+    char value[256];
 } String;
 
 typedef struct __attribute__((packed)) {
@@ -31,11 +31,12 @@ typedef struct __attribute__((packed)) {
         bool bool_value;
     };
 } NodeValue;
+
 typedef struct __attribute__((packed)) {
     node_id_t id;
     node_id_t parent_id;
     NodeValue value;
 } Node;
 
-NodeValue *node_value_string_new(char *string);
+NodeValue node_value_string_new(char *string);
 Node *node_string_new(char *string);

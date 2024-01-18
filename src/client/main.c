@@ -36,7 +36,7 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
 // read from input using parser
 // then call net_client functions based on the query
 int main(int argc, char **argv) {
-    char *address = "127.0.0.1:9092";
+    char *address = "127.0.0.1:9097";
 
     char *command = "test.txt\n";
     Query *q = parser_parse_command(command);
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
                     .page_id = 0,
                     .item_id = 0
             },
-            .value = *node_value_string_new(string_file_data)
+            .value = node_value_string_new(string_file_data)
     };
 
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);

@@ -10,6 +10,7 @@
 #include "public/util/memory.h"
 
 static Document *g_document = NULL;
+unsigned char log_level = INFO;
 
 // Implement server logic here
 void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node *response) {
@@ -20,17 +21,16 @@ void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node
 
     CreateNodeRequest node_request = convert_from_rpc_CreateNodeRequest(*request);
 
-    printf("parent_id: (%d/%d)\n", node_request.parent.page_id, node_request.parent.item_id);
-
     Node *result = my_alloc(sizeof(Node));
 
     CreateNodeRequest create_node_request = {
         .parent = node_request.parent,
         .value = node_request.value
     };
+    LOG_INFO("[handler] create node request. parent: (%d/%d)", create_node_request.parent.page_id, create_node_request.parent.item_id);
     Result res = document_add_node(g_document, &create_node_request, result);
     if (res.status != RES_OK) {
-        LOG_ERR("failed to add node: %s", res.message);
+        LOG_ERR("[handler] failed to add node: %s", res.message);
     }
     // TODO: pointer or value? is it initialized?
     *response = *convert_to_rpc_Node(*result);
@@ -46,6 +46,7 @@ void handle_update_node_request(const Rpc__UpdateNodeRequest *request, Rpc__Node
 
     Node *result = my_alloc(sizeof(Node));
 
+    LOG_INFO("[handler] update node request. id: (%d/%d)", node_request.node_id.page_id, node_request.node_id.item_id);
     Result res = document_update_node(g_document, &node_request, result);
     if (res.status != RES_OK) {
         LOG_ERR("failed to update node: %s", res.message);
@@ -161,39 +162,12 @@ void init_document(const char* filepath, size_t page_size) {
     }
 }
 
-// fs_new_file_path_matchers(char *files[], size_t count)
-//void test() {
-//    char *files[] = {"file1", "file2", "file3", "file4"};
-//    Node node = {
-//        .id = {
-//            .page_id = 1,
-//            .item_id = 2
-//        },
-//        .value = {
-//            .type = FILE_INFO,
-//            .file_info_value = {
-//                .name = "file4",
-//                .owner = "owner1",
-//                .access_time = 1,
-//                .mime_type = "mime1"
-//            }
-//        }
-//    };
-//    int count = 4;
-//    NodeMatcherArray *array = fs_new_file_path_matchers(files, count);
-//    for (int i = 0; i < array->matchers_count; ++i) {
-//        bool matches = node_condition_matches(array->matchers[i], node);
-//        printf("matcher: %d\n", matches);
-//    }
-//    node_matcher_array_destroy(array);
-//}
-
 int main() {
 //    test();
 //    return 0;
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
-    const char* filepath = "/tmp/llp-heap-file-9";
-    const char *listen_port = "9092";
+    const char* filepath = "/tmp/llp-heap-file-10";
+    const char *listen_port = "9097";
 
     remove(filepath);
 
