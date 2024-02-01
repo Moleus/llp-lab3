@@ -61,12 +61,15 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
         page_index_t continue_on_page = NULL_PAGE_INDEX;
         Page *free_page = NULL;
         int32_t payload_size = (int32_t) payload.size - (int32_t) bytes_written;
-        if (page_can_fit_any_payload(current_page) == false) {
+        if (page_can_fit_any_payload(current_page) == false ||
+        // dirty hack to not split pages
+            page_can_fit_payload(current_page, payload_size) == false) {
             // can't place even part of a payload
             Result res = page_manager_get_new_free_page(self, &free_page);
             current_page = free_page;
             ABORT_IF_FAIL(res, "Failed to allocate one more page for payload that can't suite page")
         } else if (page_can_fit_payload(current_page, payload_size) == false) {
+            ABORT_EXIT(INTERNAL_LIB_ERROR, "We expect that payload always fits on page. Don't split")
             // early allocate next page
             Result res = page_manager_get_new_free_page(self, &free_page);
             ABORT_IF_FAIL(res, "Failed to allocate one more page for large payload")
