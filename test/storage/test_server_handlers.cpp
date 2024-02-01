@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "common.h"
 
 extern "C" {
 #include "private/storage/page_manager.h"
@@ -14,14 +15,7 @@ extern "C" {
 
 #define FILE_PATH "/tmp/test.llp"
 
-// creates document
-// adds 3 nodes to it: a, b, c
-// calls handler with filterChain
-TEST(server_handlers, get_nodes_by_filter_request) {
-    remove(FILE_PATH);
-
-    Document* doc = server_init_document(FILE_PATH, PAGE_SIZE);
-
+NodesArray* setup_nodes(Document *doc) {
     CreateNodeRequest root_req = (CreateNodeRequest) {
             .parent = NULL_NODE_ID,
             .value = node_value_string_new("/")
@@ -29,7 +23,7 @@ TEST(server_handlers, get_nodes_by_filter_request) {
 
     Node root =  {0};
     Result res = document_add_node(doc, &root_req, &root);
-    ASSERT_EQ(res.status, RES_OK);
+    ABORT_IF_FAIL(res, "Failed to add root node");
 
     char *nodes[] = {
             "ssl root 1705324315 inode/directory",
@@ -38,15 +32,24 @@ TEST(server_handlers, get_nodes_by_filter_request) {
     };
 
     int nodes_count = sizeof(nodes) / sizeof(nodes[0]);
-    Node nodes_created[nodes_count];
+    NodesArray *arr = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * nodes_count);
     for (int i = 0; i < nodes_count; i++) {
         CreateNodeRequest req = (CreateNodeRequest) {
                 .parent = root.id,
                 .value = node_value_string_new(nodes[i])
         };
-        res = document_add_node(doc, &req, &nodes_created[i]);
-        ASSERT_EQ(res.status, RES_OK);
+        res = document_add_node(doc, &req, &(arr->nodes[i]));
+        ABORT_IF_FAIL(res, "Failed to add child node");
     }
+
+    return arr;
+}
+
+TEST(server_handlers, get_nodes_by_filter_request) {
+    remove(FILE_PATH);
+
+    Document* doc = server_init_document(FILE_PATH, PAGE_SIZE);
+    NodesArray *arr = setup_nodes(doc);
 
     Rpc__Filter root_filter = RPC__FILTER__INIT;
     root_filter.type = RPC__FILTER__TYPE__EQUAL;
@@ -73,8 +76,39 @@ TEST(server_handlers, get_nodes_by_filter_request) {
     handle_get_nodes_by_filter_request(&chain, &response);
 
     ASSERT_EQ(response.n_nodes, 1);
-    ASSERT_EQ(response.nodes[0]->id->page_id, nodes_created[2].id.page_id);
-    ASSERT_EQ(response.nodes[0]->id->item_id, nodes_created[2].id.item_id);
+    ASSERT_EQ(response.nodes[0]->id->page_id, arr->nodes[2].id.page_id);
+    ASSERT_EQ(response.nodes[0]->id->item_id, arr->nodes[2].id.item_id);
     ASSERT_EQ(response.nodes[0]->value->type, RPC__NODE_VALUE__TYPE__STRING);
     ASSERT_STREQ(response.nodes[0]->value->string_value, "passwd root 1705324315 text/plain");
+}
+
+TEST(server, handle_create_node_request) {
+    remove(FILE_PATH);
+
+
+    Document* doc = server_init_document(FILE_PATH, PAGE_SIZE);
+    NodesArray *arr = setup_nodes(doc);
+
+    CreateNodeRequest req = (CreateNodeRequest) {
+        .parent = (node_id_t ) {.page_id=0, .item_id=0},
+        .value = (NodeValue) {
+            .type = STRING,
+            .string_value = (String) {
+                .length = 1,
+                .value = "a"
+            }
+        }
+    };
+    Rpc__CreateNodeRequest *pRequest = convert_to_rpc_CreateNodeRequest(req);
+
+    Rpc__Node response = {0};
+
+    handle_create_node_request(pRequest, &response);
+
+    ASSERT_EQ(response.parent_id->page_id, req.parent.page_id);
+    ASSERT_EQ(response.parent_id->item_id, req.parent.item_id);
+    ASSERT_EQ(response.value->type, RPC__NODE_VALUE__TYPE__STRING);
+    for (int i = 0; i < req.value.string_value.length; i++) {
+        ASSERT_EQ(response.value->string_value[i], req.value.string_value.value[i]);
+    }
 }

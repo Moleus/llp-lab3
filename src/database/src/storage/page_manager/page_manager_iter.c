@@ -56,7 +56,7 @@ ItemIterator *item_iterator_new(PageManager *page_manager, Item *reusable_memory
 
     PageIterator *page_iterator = page_manager_get_pages(page_manager);
     *reusable_memory = (Item) {.is_deleted = true, .id.item_id = -1, .payload = {.data = NULL, .size = 0}};
-    *item_it = (ItemIterator) {.page_iterator = page_iterator, .current_item = reusable_memory, .current_item_index = {.item_id=-1, .page_id=page_id(-1)}, .allocated_payloads = allocated_payloads, .allocated_payloads_count = 0};
+    *item_it = (ItemIterator) {.page_iterator = page_iterator, .current_item = reusable_memory, .current_item_index = -1, .allocated_payloads = allocated_payloads, .allocated_payloads_count = 0};
     return item_it;
 }
 
@@ -79,10 +79,13 @@ bool item_iterator_has_next(ItemIterator *self) {
     }
     // Если текущая страница не пустая
     // проблема, когда мы нашли следующую страницу и перешли на нее. Тогда наш индекс больше чем следующий айтем
-    if (next_item(self->current_item_index).item_id < cur_page->page_header.next_item_id.item_id) {
+    if (self->current_item_index + 1 < cur_page->page_header.next_item_id.item_id) {
         // Скорее всего да, т.к. за next_item_id не должно быть удаленных элементов
         return true;
     }
+
+    Page *prev_page = cur_page;
+    item_index_t last_item_on_prev_page = item_id(page_get_id(prev_page), self->current_item_index);
     // Если на этой странице больше нет элементов - надо проверить на следующей
     // нужно загрузить следующую страницу и проверить, что кол-во элементов в ней больше 0
     // надо проверять следующие страницы, пока не найдем страницу с элементами или кол-во страниц не закончится
@@ -91,17 +94,27 @@ bool item_iterator_has_next(ItemIterator *self) {
         cur_page = NULL;
         Result res = page_iterator_next(self->page_iterator, &cur_page);
         ABORT_IF_FAIL(res, "Failed to get next page")
-        ItemMetadata *cur_item_metadata = get_metadata(cur_page, self->current_item_index);
+        // смотрим на нулевой элемент на странице
+        ItemMetadata *prev_item_metadata = get_metadata(prev_page, last_item_on_prev_page);
         if (cur_page->page_header.items_count > 0) {
-            if (cur_page->page_header.items_count == 1 && cur_item_metadata->continues_on_page.id == page_get_id(cur_page).id) {
-                // Если на странице только 1 элемент и он продолжается на следующей странице - то это не отдельный элемент
-                LOG_DEBUG("ItemIterator - Page %d has only one element and it's continuation of %d", page_get_id(cur_page).id,
-                          self->current_item_index.item_id);
+            if (prev_item_metadata->continues_on_page.id != page_get_id(cur_page).id) {
+                // Это новый отдельный элемент. Берем
+                LOG_DEBUG("ItemIterator - found item on page %d", cur_page->page_header.page_id.id);
+                self->current_item_index = -1;
+                return true;
+            }
+            // Продолжение предыдущего элемента
+            if (cur_page->page_header.items_count == 1) {
+                // продолжение занимает всю страницу, итерируемся дальше по страницам
+                LOG_DEBUG("ItemIterator - Page %d has only one element and it's continuation of %d",
+                          page_get_id(cur_page).id,
+                          self->current_item_index);
                 continue;
             }
+
+            // Продолжение занимает часть страницы, значит берем следующий элемент
             LOG_DEBUG("ItemIterator - found item on page %d", cur_page->page_header.page_id.id);
-            // если мы нашли следующую страницу, то обнуляем индес
-            self->current_item_index.item_id = -1;
+            self->current_item_index = 1;
             return true;
         }
     }
@@ -149,13 +162,10 @@ Result item_iterator_next(ItemIterator *self, Item *result) {
         ABORT_EXIT(INTERNAL_LIB_ERROR, "No more items in iterator")
     }
 
-    item_index_t old_item_index = self->current_item_index;
     Page *cur_page = self->page_iterator->current_page;
-    int32_t new_item_index = ++self->current_item_index.item_id;
+    int32_t new_item_index = ++self->current_item_index;
 
-    old_item_index.page_id = page_get_id(cur_page);
-    self->current_item_index.page_id = page_get_id(cur_page);
-    item_index_t new_item = next_item(old_item_index);
+    item_index_t new_item = item_id(page_get_id(cur_page), new_item_index);
 
     if (new_item.item_id > cur_page->page_header.next_item_id.item_id) {
         LOG_ERR("Page: %d. Next item %d is on next page", cur_page, new_item_index);

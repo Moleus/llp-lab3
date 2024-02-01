@@ -59,7 +59,7 @@ Rpc__DeleteNodeRequest *convert_to_rpc_DeleteNodeRequest(DeleteNodeRequest reque
 }
 
 Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
-    Rpc__NodeValue *result = malloc(sizeof(Rpc__NodeValue));
+    Rpc__NodeValue *result = my_alloc(sizeof(Rpc__NodeValue));
     Rpc__NodeValue tmp_result = RPC__NODE_VALUE__INIT;
 
     switch (value.type) {
@@ -93,7 +93,7 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
 }
 
 Rpc__Node *convert_to_rpc_Node(Node node) {
-    Rpc__Node *result = malloc(sizeof(Rpc__Node));
+    Rpc__Node *result = my_alloc(sizeof(Rpc__Node));
     Rpc__Node tmp_result = RPC__NODE__INIT;
     tmp_result.id = convert_node_id_to_rpc(node.id);
     tmp_result.parent_id = convert_node_id_to_rpc(node.parent_id);
@@ -105,7 +105,7 @@ Rpc__Node *convert_to_rpc_Node(Node node) {
 Rpc__Nodes convert_to_rpc_Nodes(NodesArray *nodes) {
     Rpc__Nodes result = RPC__NODES__INIT;
     result.n_nodes = nodes->count;
-    result.nodes = malloc(sizeof(Rpc__Node*) * nodes->count);
+    result.nodes = my_alloc(sizeof(Rpc__Node*) * nodes->count);
     for (int i = 0; i < nodes->count; i++) {
         result.nodes[i] = convert_to_rpc_Node(nodes->nodes[i]);
     }
@@ -138,19 +138,19 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
     NodeValue result = {0};
     switch (value.type) {
-        case INT_32:
+        case RPC__NODE_VALUE__TYPE__INT_32:
             result.int_value = value.int_value;
             result.type = INT_32;
             break;
-        case DOUBLE:
+        case RPC__NODE_VALUE__TYPE__DOUBLE:
             result.double_value = value.double_value;
             result.type = DOUBLE;
             break;
-        case STRING:
+        case RPC__NODE_VALUE__TYPE__STRING:
             result = node_value_string_new(value.string_value);
             result.type = STRING;
             break;
-        case BOOL:
+        case RPC__NODE_VALUE__TYPE__BOOL:
             result.bool_value = value.bool_value;
             result.type = BOOL;
             break;

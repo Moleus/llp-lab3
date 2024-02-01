@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "common.h"
 
 extern "C" {
 #include "helpers.h"

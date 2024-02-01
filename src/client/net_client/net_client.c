@@ -52,15 +52,20 @@ void run_main_loop(ClientService *self) {
 }
 
 static void handle_create_response(const Rpc__Node *response, void *closure_data) {
-    printf("handle_create_response\n");
+    LOG_INFO("handle_create_response\n", "");
     if (response == NULL) {
-        printf("Error processing request.\n");
+        LOG_INFO("Error processing request.\n", "");
     } else {
         node_id_t node_id = convert_from_rpc_nodeId(response->id);
-        printf("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
+        LOG_INFO("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
         if (node_id.item_id != -1) {
             Rpc__NodeValue *nodeValue = response->value;
-            printf("Data: %s\n", nodeValue->string_value);
+            if (nodeValue->type != RPC__NODE_VALUE__TYPE__STRING) {
+                LOG_ERR("Error: node value is not string. Type: %d\n", nodeValue->type);
+                exit(1);
+            } else {
+                printf("Data: %s\n", nodeValue->string_value);
+            }
         }
     }
     *(protobuf_c_boolean *) closure_data = 1;

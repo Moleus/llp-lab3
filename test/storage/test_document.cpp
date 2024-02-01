@@ -7,6 +7,7 @@ extern "C" {
 #include "private/document_db/document.h"
 #include "public/util/memory.h"
 #include "public/document_db/node_conditions.h"
+#include "fs.h"
 }
 
 #define PAGE_SIZE 4096
@@ -164,4 +165,44 @@ TEST(document, get_node_by_condition_sequence) {
             .value = "e (child of c)"
         }
     });
+}
+
+TEST(document, many_child_nodes) {
+    remove_file();
+    Document *doc = document_new();
+    Result res = document_init(doc, FILE_PATH, 512);
+    ASSERT_EQ(res.status, RES_OK);
+
+    char *files[] = {
+            "ssl root 1705324315 inode/directory",
+            "timezone root 1705324315 text/plain",
+            "hosts root 1705324315 text/plain",
+            "passwd root 1705324315 text/plain",
+            "group root 1705324315 text/plain",
+            "fstab root 1705324315 text/plain",
+            "shadow root 1705324315 text/plain",
+            "gshadow root 1705324315 text/plain",
+    };
+
+    CreateNodeRequest requests[9];
+    requests[0] = {.parent = {.page_id = -1, .item_id = -1}, .value = node_value_string_new("/ root 1705324315 inode/directory")};
+
+    for (int i = 0; i < 8; i++) {
+        requests[i+1] = {.parent = {.page_id = 0, .item_id = 0}, .value = node_value_string_new(files[i])};;
+    }
+
+    for (auto & request : requests) {
+        Node result;
+        res = document_add_node(doc, &request, &result);
+        ASSERT_EQ(res.status, RES_OK);
+    }
+
+    NodeMatcher *matcher = node_matcher_new(fs_new_attribute_condition("name", "/"));
+
+    auto *nodeArr = (NodesArray*) my_alloc(sizeof(NodesArray) + sizeof(Node) * 1);
+    nodeArr->count = 1;
+    res = document_get_nodes_by_condition(doc, matcher, nodeArr);
+    ASSERT_EQ(res.status, RES_OK);
+
+    document_destroy(doc);
 }

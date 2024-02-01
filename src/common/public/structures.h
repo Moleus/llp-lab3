@@ -16,6 +16,7 @@ typedef struct __attribute__((packed)) {
 } node_id_t;
 
 typedef enum __attribute__((packed)) {
+    UNKNOWN,
     INT_32,
     DOUBLE,
     STRING,

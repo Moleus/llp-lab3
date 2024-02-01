@@ -27,7 +27,7 @@ struct AllocatedPayload {
 
 struct ItemIterator {
     PageIterator *page_iterator;
-    item_index_t current_item_index;
+    int32_t current_item_index;
     Item *current_item;
     uint32_t allocated_payloads_count;
     struct AllocatedPayload *allocated_payloads;
