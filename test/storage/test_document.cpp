@@ -8,7 +8,7 @@ extern "C" {
 #include "public/document_db/node_conditions.h"
 }
 
-#define PAGE_SIZE 80
+#define PAGE_SIZE 4096
 #define SIGNATURE 0x12345678
 
 #define FILE_PATH "/tmp/test.llp"
@@ -38,7 +38,7 @@ TEST(document, create_multiple_nodes_delete_one) {
     Document *doc = document_new();
     remove(FILE_PATH);
 
-    Result res = document_init(doc, FILE_PATH, 512);
+    Result res = document_init(doc, FILE_PATH, PAGE_SIZE);
     ASSERT_EQ(res.status, RES_OK);
 
     Node string_node = {0};
@@ -104,7 +104,7 @@ TEST(document, add_chain_of_nodes) {
     Document *doc = document_new();
     remove(FILE_PATH);
 
-    Result res = document_init(doc, FILE_PATH, 512);
+    Result res = document_init(doc, FILE_PATH, 4096);
     ASSERT_EQ(res.status, RES_OK);
 
     // add nodes
@@ -115,6 +115,7 @@ TEST(document, add_chain_of_nodes) {
     Node a = {0};
     res = document_add_node(doc, &a_req, &a);
     ASSERT_EQ(res.status, RES_OK);
+    ASSERT_EQ(a.id.item_id, 0);
 
     CreateNodeRequest b_req = {
             .parent = a.id,
@@ -123,6 +124,7 @@ TEST(document, add_chain_of_nodes) {
     Node b = {0};
     res = document_add_node(doc, &b_req, &b);
     ASSERT_EQ(res.status, RES_OK);
+    ASSERT_EQ(b.id.item_id, 1);
 
     CreateNodeRequest c_req = {
             .parent = b.id,
@@ -131,6 +133,7 @@ TEST(document, add_chain_of_nodes) {
     Node c = {0};
     res = document_add_node(doc, &c_req, &c);
     ASSERT_EQ(res.status, RES_OK);
+    ASSERT_EQ(c.id.item_id, 2);
 
     // get all nodes
     int MAX_NODES = 10;
@@ -169,7 +172,7 @@ TEST(document, get_node_by_condition_sequence) {
     Document *doc = document_new();
     remove(FILE_PATH);
 
-    Result res = document_init(doc, FILE_PATH, 512);
+    Result res = document_init(doc, FILE_PATH, PAGE_SIZE);
     ASSERT_EQ(res.status, RES_OK);
 
     // add nodes

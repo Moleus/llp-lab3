@@ -28,6 +28,17 @@ double document_get_deletion_time_ms(void) {
     return deletion_time;
 }
 
+node_id_t item_to_node_id(item_index_t item_id) {
+    return (node_id_t) {.page_id = item_id.page_id.id, .item_id = item_id.item_id};
+}
+
+Node *item_to_node(Item item) {
+    assert(item.payload.size > 0);
+    Node *node = item.payload.data;
+    node->id = item_to_node_id(item.id);
+    return node;
+}
+
 Document *document_new() {
     Document *document = malloc(sizeof(Document));
     ASSERT_NOT_NULL(document, FAILED_TO_ALLOCATE_MEMORY)
@@ -84,7 +95,7 @@ Result document_persist_new_node(Document *self, Node *node) {
     res = page_manager_put_item(self->page_manager, page, itemPayload, &item_result);
     RETURN_IF_FAIL(res, "failed to persist new data")
 
-    node->id = (node_id_t) {.page_id = item_result.metadata.item_id.page_id.id, .item_id = item_result.metadata.item_id.item_id};
+    node->id = item_to_node_id(item_result.metadata.item_id);
     page_manager_free_pages(self->page_manager);
 
     g_insert_end_time = clock();
@@ -106,7 +117,7 @@ Result document_add_root_node(Document *self, Node *root) {
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to add root node")
-        Node *node = item.payload.data;
+        Node *node = item_to_node(item);
         if (is_root_node(node->id)) {
             return ERROR("Root node already exists in document tree");
         }
@@ -127,8 +138,8 @@ Result document_add_child_node(Document *self, Node *current_node) {
     ItemIterator *items_it = page_manager_get_items(self->page_manager, &item);
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
-        RETURN_IF_FAIL(get_item_res, "failed to add node")
-        Node *tmp_node = item.payload.data;
+        ABORT_IF_FAIL(get_item_res, "Failed to get next item in iterator")
+        Node *tmp_node = item_to_node(item);
         if (node_id_eq(tmp_node->id, current_node->parent_id)) {
             // found parent node. Ok. Adding new
             item_iterator_destroy(items_it);
@@ -146,8 +157,6 @@ Result document_add_node(Document *self, CreateNodeRequest *request, Node *resul
     ASSERT_ARG_NOT_NULL(result)
     assert(self->init_done);
 
-    // if parent node is null, then this is root node. Then check that we have only 1 root node in file
-    /* if parent node is not null, then check that it exists in file */
     result->value = request->value;
     result->parent_id = request->parent;
 
@@ -213,7 +222,7 @@ Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *re
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to delete node")
-        Node *tmp_node = item.payload.data;
+        Node *tmp_node = item_to_node(item);
 
         if (node_id_eq(tmp_node->parent_id, request->node_id)) {
             // We are trying to delete node with children
@@ -296,7 +305,7 @@ Result document_add_bulk_nodes(Document *self, CreateMultipleNodesRequest *reque
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to bulk add node")
-        Node *tmp_node = item.payload.data;
+        Node *tmp_node = item_to_node(item);
         if (node_id_eq(tmp_node->id, request->parent)) {
             // found parent node. Ok. Adding new
             result->count = request->count;
@@ -338,7 +347,7 @@ Result document_get_all_children(Document *self, GetAllChildrenRequest *request,
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to bulk add node")
-        Node *tmp_node = item.payload.data;
+        Node *tmp_node = item_to_node(item);
         if (node_id_eq(tmp_node->parent_id, request->parent)) {
             count++;
         }
@@ -353,7 +362,7 @@ Result document_get_all_children(Document *self, GetAllChildrenRequest *request,
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to bulk add node")
-        Node *tmp_node = item.payload.data;
+        Node *tmp_node = item_to_node(item);
         if (node_id_eq(tmp_node->parent_id, request->parent)) {
             result->nodes[i++] = *tmp_node;
         }
@@ -374,7 +383,7 @@ Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
         RETURN_IF_FAIL(get_item_res, "failed to get node from iterator")
-        Node *tmp_node = item.payload.data;
+        Node *tmp_node = item_to_node(item);
         if (node_condition_matches(matcher, *tmp_node)) {
             *result = *tmp_node;
             item_iterator_destroy(items_it);
@@ -400,7 +409,7 @@ Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray 
     *current_node = *self->root_node;
 
     // TODO: should we start from root or the provided node?
-    node_id_t parent_id = ROOT_NODE_ID;
+    node_id_t parent_id = NULL_NODE_ID;
 
     for (size_t i = 0; i < matchers->matchers_count; i++) {
         ASSERT_NOT_NULL(matchers->matchers[i], INTERNAL_LIB_ERROR)

@@ -80,7 +80,7 @@ bool item_iterator_has_next(ItemIterator *self) {
     // Если текущая страница не пустая
     // проблема, когда мы нашли следующую страницу и перешли на нее. Тогда наш индекс больше чем следующий айтем
     if (next_item(self->current_item_index).item_id < cur_page->page_header.next_item_id.item_id) {
-        // Скорее всего да, т.к за next_item_id не должно быть удаленных элементов
+        // Скорее всего да, т.к. за next_item_id не должно быть удаленных элементов
         return true;
     }
     // Если на этой странице больше нет элементов - надо проверить на следующей
@@ -154,6 +154,7 @@ Result item_iterator_next(ItemIterator *self, Item *result) {
     int32_t new_item_index = ++self->current_item_index.item_id;
 
     old_item_index.page_id = page_get_id(cur_page);
+    self->current_item_index.page_id = page_get_id(cur_page);
     item_index_t new_item = next_item(old_item_index);
 
     if (new_item.item_id > cur_page->page_header.next_item_id.item_id) {
