@@ -52,7 +52,8 @@ Result page_get_item(Page *self, item_index_t item_id, Item *item) {
             (ItemPayload) {.size = metadata->size, .data = get_item_data_addr(self, metadata->data_offset)},
             item_id);
 
-    LOG_DEBUG("Created item with id %d (or %d), size: %d, offset: %d", item_id.item_id, item->id.item_id, item->payload.size, metadata->data_offset);
+    assert(item_id.item_id == item->id.item_id);
+    LOG_DEBUG("Created item with id %d, size: %d, offset: %d", item_id.item_id, item->payload.size, metadata->data_offset);
     return OK;
 }
 

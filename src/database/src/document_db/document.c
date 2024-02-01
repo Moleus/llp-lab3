@@ -406,7 +406,7 @@ Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray 
         ASSERT_NOT_NULL(matchers->matchers[i], INTERNAL_LIB_ERROR)
         NodeMatcher *matcher = matchers->matchers[i];
         // match node where parent_id is the previous node id
-//        node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
+        node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
         Result res = document_get_node_by_condition(self, matcher, current_node);
         if (res.status != RES_OK) {
             LOG_DEBUG("Failed to get node by condition", "");
