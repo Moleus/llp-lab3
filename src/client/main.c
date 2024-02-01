@@ -3,8 +3,8 @@
 #include "public/util/log.h"
 #include "parser/types.h"
 #include "parser/my_parser.h"
-#include "public/structures.h"
 #include "public/util/memory.h"
+#include "helpers.h"
 
 unsigned char log_level = DEBUG;
 
@@ -33,40 +33,27 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
     return filter_chain;
 }
 
+void fill_with_data(ClientService *client) {
+    Requests r = generate_requests();
+
+    for (int i = 0; i < r.count; ++i) {
+        client_add_node(client, &r.create[i]);
+    }
+}
+
 // read from input using parser
 // then call net_client functions based on the query
 int main(int argc, char **argv) {
     char *address = "127.0.0.1:9097";
 
-    char *command = "test.txt\n";
+    char *command = "/hosts\n";
     Query *q = parser_parse_command(command);
-
-
-    char *string_file_data = "test.txt root 123456789 text/plain";
-
-    // hardcoded sample data
-    CreateNodeRequest data = {
-            .parent = {
-                    .page_id = 0,
-                    .item_id = 0
-            },
-            .value = node_value_string_new(string_file_data)
-    };
-
+//
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
 
     ClientService *service = client_service_new(address);
 
-    CreateNodeRequest root = data;
-    root.parent = (node_id_t ){
-            .page_id = -1,
-            .item_id = -1
-
-    };
-
     client_delete_all_nodes(service);
-
-    client_add_node(service, &root);
     for (;;) {
 //        Query query = parse();
 

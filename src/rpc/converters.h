@@ -11,6 +11,11 @@ typedef struct {
 } CreateNodeRequest;
 
 typedef struct {
+    int count;
+    CreateNodeRequest *create;
+} Requests;
+
+typedef struct {
     node_id_t node_id;
     node_id_t parent_id;
     NodeValue new_value;
