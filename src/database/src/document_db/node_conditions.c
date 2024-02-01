@@ -4,7 +4,6 @@
 #include <Block.h>
 #include <assert.h>
 #include "public/structures.h"
-#include "public/util/log.h"
 
 NodeConditionFunc node_conditions_equals_str(char *expected_str) {
     return Block_copy( ^bool(Node node) {
@@ -22,3 +21,10 @@ NodeConditionFunc node_conditions_parent_equals(node_id_t parent_id) {
         return node.parent_id.page_id == parent_id.page_id && node.parent_id.item_id == parent_id.item_id;
     });
 }
+
+NodeConditionFunc node_condition_all(void) {
+    return Block_copy(^bool(Node value) {
+        return true;
+    });
+}
+

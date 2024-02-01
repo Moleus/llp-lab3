@@ -62,24 +62,27 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
     Rpc__NodeValue *result = malloc(sizeof(Rpc__NodeValue));
     Rpc__NodeValue tmp_result = RPC__NODE_VALUE__INIT;
 
-    tmp_result.type = (Rpc__NodeValue__Type) value.type;
     switch (value.type) {
         case INT_32:
             tmp_result.int_value = value.int_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_INT_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__INT_32;
             break;
         case DOUBLE:
             tmp_result.double_value = value.double_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_DOUBLE_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__DOUBLE;
             break;
         case STRING:
             tmp_result.string_value = my_alloc(sizeof(char*) * (value.string_value.length + 1));
             strcpy(tmp_result.string_value, value.string_value.value);
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_STRING_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__STRING;
             break;
         case BOOL:
             tmp_result.bool_value = value.bool_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_BOOL_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__BOOL;
             break;
         default:
             LOG_ERR("Unknown type: %d", value.type);
@@ -96,6 +99,16 @@ Rpc__Node *convert_to_rpc_Node(Node node) {
     tmp_result.parent_id = convert_node_id_to_rpc(node.parent_id);
     tmp_result.value = convert_to_rpc_NodeValue(node.value);
     *result = tmp_result;
+    return result;
+}
+
+Rpc__Nodes convert_to_rpc_Nodes(NodesArray *nodes) {
+    Rpc__Nodes result = RPC__NODES__INIT;
+    result.n_nodes = nodes->count;
+    result.nodes = malloc(sizeof(Rpc__Node*) * nodes->count);
+    for (int i = 0; i < nodes->count; i++) {
+        result.nodes[i] = convert_to_rpc_Node(nodes->nodes[i]);
+    }
     return result;
 }
 
@@ -123,21 +136,23 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 }
 
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
-    NodeValue result = {
-            .type = (ValueType) value.type
-    };
+    NodeValue result = {0};
     switch (value.type) {
         case INT_32:
             result.int_value = value.int_value;
+            result.type = INT_32;
             break;
         case DOUBLE:
             result.double_value = value.double_value;
+            result.type = DOUBLE;
             break;
         case STRING:
             result = node_value_string_new(value.string_value);
+            result.type = STRING;
             break;
         case BOOL:
             result.bool_value = value.bool_value;
+            result.type = BOOL;
             break;
         default:
             LOG_ERR("Unknown type: %d", value.type);

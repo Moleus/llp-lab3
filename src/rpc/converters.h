@@ -30,6 +30,8 @@ Rpc__DeleteNodeRequest *convert_to_rpc_DeleteNodeRequest(DeleteNodeRequest reque
 
 Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value);
 
+Rpc__Nodes convert_to_rpc_Nodes(NodesArray *nodes);
+
 Rpc__Node *convert_to_rpc_Node(Node node);
 
 node_id_t convert_from_rpc_nodeId(Rpc__NodeId *node_id);

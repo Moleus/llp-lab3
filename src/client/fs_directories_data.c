@@ -2,13 +2,6 @@
 #include "converters.h"
 #include "public/util/memory.h"
 
-typedef struct {
-    char* name;
-    char* owner;
-    char* access_time;
-    char* mime_type;
-} FileInfo;
-
 char *files[] = {
         "ssl root 1705324315 inode/directory",
         "timezone root 1705324315 text/plain",

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include "stdint.h"
 #include "public/structures.h"
 
@@ -38,5 +39,30 @@ typedef struct __attribute__((packed)) {
     NodeValue value;
 } Node;
 
+typedef struct {
+    size_t count;
+    Node nodes[];
+} NodesArray;
+
 NodeValue node_value_string_new(char *string);
 Node *node_string_new(char *string);
+
+typedef struct {
+    char* name;
+    char* owner;
+    char* access_time;
+    char* mime_type;
+} FileInfo;
+
+FileInfo parse_file_info(char* file_info);
+
+typedef enum {
+    FILE_INFO_NAME = 1,
+    FILE_INFO_OWNER = 2,
+    FILE_INFO_ACCESS_TIME = 4,
+    FILE_INFO_MIME_TYPE = 8
+} FileInfoAttributes;
+
+FileInfoAttributes file_info_attribute_from_string(char* attribute);
+
+bool file_info_attribute_matches(FileInfoAttributes attr, char* value, FileInfo file_info);

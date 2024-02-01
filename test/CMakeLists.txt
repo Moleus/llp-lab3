@@ -23,12 +23,17 @@ add_executable(
 )
 #target_include_directories(${PROJECT_NAME})
 
+SET(CMAKE_EXE_LINKER_FLAGS
+        "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath -Wl,/usr/local/lib")
+
 target_link_libraries(
         ${PROJECT_NAME}
+        LINK_PRIVATE
         GTest::gtest_main
         GTest::gmock_main
         common_lib
         database_lib
+        server_lib
 )
 
 include(GoogleTest)

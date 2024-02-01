@@ -8,9 +8,13 @@
 #include "public/structures.h"
 #include "fs.h"
 #include "public/util/memory.h"
+#include "server.h"
 
 static Document *g_document = NULL;
-unsigned char log_level = INFO;
+
+void _set_document(Document *document) {
+    g_document = document;
+}
 
 // Implement server logic here
 void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node *response) {
@@ -74,20 +78,29 @@ void handle_delete_node_request(const Rpc__DeleteNodeRequest *request, Rpc__Node
     *response = *convert_to_rpc_Node(*result);
 }
 
-void handle_get_node_by_filter_request(const Rpc__FilterChain *request, Rpc__Node *response) {
+void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *response) {
     ASSERT_ARG_NOT_NULL(request)
     ASSERT_ARG_NOT_NULL(response)
 
-    Node *result = my_alloc(sizeof(Node));
-
     NodeMatcherArray *matcherArray = fs_new_node_matcher_array(request);
-    Result res = document_get_nodes_by_condition_sequence(g_document, matcherArray, result);
+
+    int nodes_count = 0;
+    Result res = document_count_nodes_by_condition_sequence(g_document, matcherArray, &nodes_count);
     if (res.status != RES_OK) {
-        result->id = NULL_NODE_ID;
-        LOG_WARN("[handler] failed to get node by filter: %s", res.message);
+        LOG_ERR("[handler] failed to count nodes by filter: %s", res.message);
+    }
+    LOG_INFO("[handler] nodes count: %d", nodes_count);
+
+    NodesArray *result = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * nodes_count);
+
+    result->count = nodes_count;
+    res = document_get_nodes_by_condition_sequence(g_document, matcherArray, result);
+    if (res.status != RES_OK) {
+        result->count = 0;
+        LOG_ERR("[handler] failed to get node by filter: %s", res.message);
     }
 
-    *response = *convert_to_rpc_Node(*result);
+    *response = convert_to_rpc_Nodes(result);
 }
 
 void handle_delete_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__DeletedNodes *response) {
@@ -135,11 +148,11 @@ void prefix__get_node(Rpc__Database_Service *service, const Rpc__NodeId *input, 
     (void) closure_data;
 }
 
-void prefix__get_node_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Node_Closure closure, void *closure_data) {
+void prefix__get_nodes_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Nodes_Closure closure, void *closure_data) {
     (void) service;
     LOG_INFO("[rpc__node_by_filter] Received get_node_by_filter request. Filters count: %d", input->n_filters);
-    Rpc__Node response = RPC__NODE__INIT;
-    handle_get_node_by_filter_request(input, &response);
+    Rpc__Nodes response = RPC__NODES__INIT;
+    handle_get_nodes_by_filter_request(input, &response);
     closure(&response, closure_data);
 }
 
@@ -151,41 +164,15 @@ void prefix__delete_nodes_by_filter(Rpc__Database_Service *service, const Rpc__F
     closure(&response, closure_data);
 }
 
-static Rpc__Database_Service databaseService = RPC__DATABASE__INIT(prefix__);
+Rpc__Database_Service databaseService = RPC__DATABASE__INIT(prefix__);
 
-void init_document(const char* filepath, size_t page_size) {
+Document *server_init_document(const char* filepath, size_t page_size) {
     g_document = document_new();
     Result res = document_init(g_document, filepath, page_size);
     if (res.status != RES_OK) {
         LOG_ERR("failed to init document: %s", res.message);
         exit(1);
     }
+    return g_document;
 }
 
-int main() {
-//    test();
-//    return 0;
-    ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
-    const char* filepath = "/tmp/llp-heap-file-10";
-    const char *listen_port = "9097";
-
-    remove(filepath);
-
-    init_document(filepath, 512);
-
-    signal(SIGPIPE, SIG_IGN);
-
-    ProtobufCService *service = (ProtobufCService *) &databaseService;
-
-    // TODO: fix address already in use
-    ProtobufC_RPC_Server *pServer = protobuf_c_rpc_server_new(address_type, listen_port, service, NULL);
-    if (pServer == NULL) {
-        fprintf(stderr, "Error creating server!\n");
-        exit(1);
-    }
-
-    // Run the server loop
-    for (;;) {
-        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
-    }
-}

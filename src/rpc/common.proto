@@ -1,28 +1,5 @@
 syntax = "proto3";
 
-/*
-
-typedef enum __attribute__((packed)) {
-    INT_32,
-    DOUBLE,
-    STRING,
-    BOOL,
-    FILE_INFO
-} ValueType;
-
-typedef struct __attribute__((packed)) {
-    ValueType type;
-    union __attribute__((packed)) {
-        int32_t int_value;
-        double double_value;
-        String string_value;
-        bool bool_value;
-        FileInfo file_info_value;
-    };
-} NodeValue;
-
- */
-
 package Rpc;
 
 message FileInfo {
@@ -39,11 +16,12 @@ message NodeId {
 
 message NodeValue {
   enum Type {
-    INT_32 = 0;
-    DOUBLE = 1;
-    STRING = 2;
-    BOOL = 3;
-    FILE_INFO = 4;
+    UNKNOWN = 0;
+    INT_32 = 1;
+    DOUBLE = 2;
+    STRING = 3;
+    BOOL = 4;
+    FILE_INFO = 5;
   }
 
   Type type = 1;
@@ -59,10 +37,12 @@ message NodeValue {
 // Файл будет всегда фильтроваться по имени.
 message Filter {
   enum Type {
-    GREATER = 0;
-    LESS = 1;
-    EQUAL = 2;
-    NOT_EQUAL = 3;
+    UNKNOWN_TYPE = 0;
+    GREATER = 1;
+    LESS = 2;
+    EQUAL = 3;
+    NOT_EQUAL = 4;
+    ALL = 5;
   }
   Type type = 1;
   oneof argument {
@@ -71,10 +51,17 @@ message Filter {
     string string_argument = 4;
     bool bool_argument = 5;
   }
+  oneof field_name {
+    string name = 6;
+  }
 }
 
 message FilterChain {
   repeated Filter filters = 1;
+}
+
+message Nodes {
+  repeated Node nodes = 1;
 }
 
 message Node {
@@ -107,6 +94,6 @@ service Database {
   rpc UpdateNode(UpdateNodeRequest) returns (Node);
   rpc DeleteNode(DeleteNodeRequest) returns (Node);
   rpc GetNode(NodeId) returns (Node);
-  rpc GetNodeByFilter(FilterChain) returns (Node);
+  rpc GetNodesByFilter(FilterChain) returns (Nodes);
   rpc DeleteNodesByFilter(FilterChain) returns (DeletedNodes);
 }

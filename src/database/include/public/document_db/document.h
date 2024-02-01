@@ -27,11 +27,6 @@ typedef struct {
     node_id_t parent;
 } GetAllChildrenRequest;
 
-typedef struct {
-    size_t count;
-    Node nodes[];
-} NodesArray;
-
 Document *document_new(void);
 
 Result document_init(Document *self, const char *file_path, size_t page_size);

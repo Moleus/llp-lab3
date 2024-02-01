@@ -169,12 +169,6 @@ Result document_add_node(Document *self, CreateNodeRequest *request, Node *resul
     }
 }
 
-NodeConditionFunc node_condition_all(void) {
-    return Block_copy(^bool(Node value) {
-        return true;
-    });
-}
-
 //Result document_get_nodes_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
 Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, int *deleted_count) {
     ASSERT_ARG_NOT_NULL(self)
