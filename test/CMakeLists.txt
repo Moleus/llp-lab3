@@ -33,6 +33,7 @@ target_link_libraries(
         common_lib
         database_lib
         server_lib
+        client_lib
 )
 
 include(GoogleTest)

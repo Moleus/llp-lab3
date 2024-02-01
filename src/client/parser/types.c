@@ -39,11 +39,11 @@ Element *create_string(char *value) {
     return el;
 }
 
-Filter *create_filter(char *attribute, int operator, Element *value) {
+Filter *create_filter(char *attribute, int op, Element *value) {
     FilterExpr *filter_expr = my_malloc(sizeof(FilterExpr));
     Filter *filter = my_malloc(sizeof(Filter));
     filter_expr->left.name = strdup(attribute);
-    switch (operator) {
+    switch (op) {
         case 0:
             filter_expr->operation = EQUALS_OP;
             break;

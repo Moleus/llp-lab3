@@ -34,3 +34,39 @@ Requests generate_requests() {
         .create = requests
     };
 }
+
+// takes last node from path
+Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
+    ParsedNode *cur_node = nodes;
+    int node_names_count = 1;
+    while (cur_node != NULL) {
+        node_names_count++;
+        cur_node = cur_node->next;
+    }
+
+    Rpc__FilterChain *filter_chain = my_alloc(sizeof(Rpc__FilterChain));
+    Rpc__FilterChain tmp_chain = RPC__FILTER_CHAIN__INIT;
+    *filter_chain = tmp_chain;
+    filter_chain->n_filters = node_names_count;
+    filter_chain->filters = my_alloc(sizeof(Rpc__Filter*) * node_names_count);
+
+    cur_node = my_alloc(sizeof(ParsedNode));
+    cur_node->name = "/";
+    cur_node->next = nodes;
+
+    int i = 0;
+    while (cur_node != NULL) {
+        Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
+        Rpc__Filter tmp = RPC__FILTER__INIT;
+        *filter = tmp;
+        filter->type = RPC__FILTER__TYPE__EQUAL;
+        filter->argument_case = RPC__FILTER__ARGUMENT_STRING_ARGUMENT;
+        filter->string_argument = cur_node->name;
+        filter->name = "name";
+        filter->field_name_case = RPC__FILTER__FIELD_NAME_NAME;
+        filter_chain->filters[i] = filter;
+        i++;
+        cur_node = cur_node->next;
+    }
+    return filter_chain;
+}

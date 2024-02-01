@@ -96,7 +96,7 @@ Element *create_double(double value);
 
 Element *create_string(char *value);
 
-Filter *create_filter(char *attribute, int operator, Element *value);
+Filter *create_filter(char *attribute, int op, Element *value);
 
 Filter *create_filter_single_value(Element *value);
 
