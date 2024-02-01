@@ -46,9 +46,9 @@ NodesArray* setup_nodes(Document *doc) {
 }
 
 TEST(server_handlers, get_nodes_by_filter_request) {
-    remove(FILE_PATH);
+    char *tmpfilename = tmpnam(NULL);
 
-    Document* doc = server_init_document(FILE_PATH, PAGE_SIZE);
+    Document* doc = server_init_document(tmpfilename, PAGE_SIZE);
     NodesArray *arr = setup_nodes(doc);
 
     Rpc__Filter root_filter = RPC__FILTER__INIT;
@@ -80,13 +80,15 @@ TEST(server_handlers, get_nodes_by_filter_request) {
     ASSERT_EQ(response.nodes[0]->id->item_id, arr->nodes[2].id.item_id);
     ASSERT_EQ(response.nodes[0]->value->type, RPC__NODE_VALUE__TYPE__STRING);
     ASSERT_STREQ(response.nodes[0]->value->string_value, "passwd root 1705324315 text/plain");
+
+    document_destroy(doc);
+    remove(tmpfilename);
 }
 
 TEST(server, handle_create_node_request) {
-    remove(FILE_PATH);
+    char *tmpfilename = tmpnam(NULL);
 
-
-    Document* doc = server_init_document(FILE_PATH, PAGE_SIZE);
+    Document* doc = server_init_document(tmpfilename, PAGE_SIZE);
     NodesArray *arr = setup_nodes(doc);
 
     CreateNodeRequest req = (CreateNodeRequest) {
@@ -111,4 +113,7 @@ TEST(server, handle_create_node_request) {
     for (int i = 0; i < req.value.string_value.length; i++) {
         ASSERT_EQ(response.value->string_value[i], req.value.string_value.value[i]);
     }
+
+    document_destroy(doc);
+    remove(tmpfilename);
 }

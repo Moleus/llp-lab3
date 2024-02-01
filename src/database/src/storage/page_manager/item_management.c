@@ -70,7 +70,6 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
             current_page = free_page;
             ABORT_IF_FAIL(res, "Failed to allocate one more page for payload that can't suite page")
         } else if (page_can_fit_payload(current_page, payload_size) == false) {
-//            ABORT_EXIT(INTERNAL_LIB_ERROR, "We expect that payload always fits on page. Don't split")
             // early allocate next page
             Result res = page_manager_get_new_free_page(self, &free_page);
             ABORT_IF_FAIL(res, "Failed to allocate one more page for large payload")

@@ -14,15 +14,15 @@ extern "C" {
 #define SIGNATURE 0x12345678
 
 TEST(document, create_multiple_nodes_delete_one) {
+    char *tmpfilename = tmpnam(NULL);
     char *data = "hello";
     CreateNodeRequest string_req = (CreateNodeRequest) {
             .parent = NULL_NODE_ID,
             .value = node_value_string_new(data)
     };
     Document *doc = document_new();
-    remove(FILE_PATH);
 
-    Result res = document_init(doc, FILE_PATH, PAGE_SIZE);
+    Result res = document_init(doc, tmpfilename, PAGE_SIZE);
     ASSERT_EQ(res.status, RES_OK);
 
     Node string_node = {0};
@@ -61,7 +61,7 @@ TEST(document, create_multiple_nodes_delete_one) {
     document_destroy(doc);
 
     Document *new_doc = document_new();
-    res = document_init(new_doc, FILE_PATH, 512);
+    res = document_init(new_doc, tmpfilename, 512);
     ASSERT_EQ(res.status, RES_OK);
 
     // get all nodes
@@ -81,14 +81,15 @@ TEST(document, create_multiple_nodes_delete_one) {
             });
 
     document_destroy(new_doc);
+    remove(tmpfilename);
 }
 
 // adds nodes a -> b -> c -> d. Creates conditions and cals document_get_nodes_by_condition_sequence
 TEST(document, get_node_by_condition_sequence) {
+    char *tmpfilename = tmpnam(NULL);
     Document *doc = document_new();
-    remove(FILE_PATH);
 
-    Result res = document_init(doc, FILE_PATH, PAGE_SIZE);
+    Result res = document_init(doc, tmpfilename, PAGE_SIZE);
     ASSERT_EQ(res.status, RES_OK);
 
     // add nodes
@@ -165,12 +166,15 @@ TEST(document, get_node_by_condition_sequence) {
             .value = "e (child of c)"
         }
     });
+
+    document_destroy(doc);
+    remove(tmpfilename);
 }
 
 TEST(document, many_child_nodes) {
-    remove_file();
+    char *tmpfilename = tmpnam(NULL);
     Document *doc = document_new();
-    Result res = document_init(doc, FILE_PATH, 512);
+    Result res = document_init(doc, tmpfilename, 512);
     ASSERT_EQ(res.status, RES_OK);
 
     char *files[] = {
@@ -205,4 +209,5 @@ TEST(document, many_child_nodes) {
     ASSERT_EQ(res.status, RES_OK);
 
     document_destroy(doc);
+    remove(tmpfilename);
 }

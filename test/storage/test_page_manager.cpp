@@ -23,8 +23,9 @@ ItemPayload get_payload() {
 
 // test page_manager. It should create page of size 128 bytes and write to it 8 bytes of data
 TEST(test_page_manager, test_page_manager) {
+    char *tmpfilename = tmpnam(NULL);
     PageManager *pm = page_manager_new();
-    Result res = page_manager_init(pm, FILE_PATH, PAGE_SIZE, SIGNATURE);
+    Result res = page_manager_init(pm, tmpfilename, PAGE_SIZE, SIGNATURE);
     ASSERT_EQ(res.status, RES_OK);
 
     ASSERT_EQ(page_manager_get_pages_count(pm), 1);
@@ -42,7 +43,7 @@ TEST(test_page_manager, test_page_manager) {
 
     page_manager_destroy(pm);
     pm = page_manager_new();
-    res = page_manager_init(pm, FILE_PATH, PAGE_SIZE, SIGNATURE);
+    res = page_manager_init(pm, tmpfilename, PAGE_SIZE, SIGNATURE);
     page = page_manager_get_current_free_page(pm);
     ASSERT_EQ(res.status, RES_OK);
     page_manager_put_item(pm, page, payload, &result);
@@ -51,13 +52,14 @@ TEST(test_page_manager, test_page_manager) {
     ASSERT_EQ(result.metadata.data_offset, PAGE_SIZE - payload.size * 2);
     ASSERT_EQ(result.metadata_offset_in_page, sizeof(PageHeader) + sizeof(ItemMetadata));
     page_manager_destroy(pm);
-    remove_file();
+    remove(tmpfilename);
 }
 
 // add 2 items. Delete 1 item
 TEST(test_page_manager, test_add_after_delete) {
+    char *tmpfilename = tmpnam(NULL);
     PageManager *pm = page_manager_new();
-    page_manager_init(pm, FILE_PATH, PAGE_SIZE, SIGNATURE);
+    page_manager_init(pm, tmpfilename, PAGE_SIZE, SIGNATURE);
 
     ItemPayload payload = get_payload();
     ItemAddResult add_result1;
@@ -77,13 +79,14 @@ TEST(test_page_manager, test_add_after_delete) {
     ASSERT_EQ(pm->current_free_page->page_header.next_item_id.item_id, 2);
     ASSERT_EQ(item.is_deleted, true);
     page_manager_destroy(pm);
-    remove_file();
+    remove(tmpfilename);
 }
 
 // add large item which is larger than page size. Check that it is split into 2 pages
 TEST(test_page_manager, test_add_large_item) {
+    char *tmpfilename = tmpnam(NULL);
     PageManager *pm = page_manager_new();
-    page_manager_init(pm, FILE_PATH, PAGE_SIZE, SIGNATURE);
+    page_manager_init(pm, tmpfilename, PAGE_SIZE, SIGNATURE);
 
     // create continues 0xFF data with size 128
     const uint32_t payload_size = PAGE_SIZE;
@@ -115,5 +118,5 @@ TEST(test_page_manager, test_add_large_item) {
     ASSERT_EQ(second_page->page_header.free_space_start_offset, sizeof(PageHeader) + sizeof(ItemMetadata));
     ASSERT_EQ(second_page->page_header.free_space_end_offset, PAGE_SIZE - expected_bytes_on_second_page);
     page_manager_destroy(pm);
-    remove_file();
+    remove(tmpfilename);
 }

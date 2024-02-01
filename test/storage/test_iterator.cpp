@@ -17,10 +17,10 @@ extern "C" {
 init PageManager. put several items. Then init item iterator and check that it iterates over all of them
  */
 TEST(test_iterator, basic_iteration) {
-    remove(FILE_PATH);
+    char *tmpfilename = tmpnam(NULL);
 
     PageManager *pm = page_manager_new();
-    page_manager_init(pm, FILE_PATH, PAGE_SIZE, SIGNATURE);
+    page_manager_init(pm, tmpfilename, PAGE_SIZE, SIGNATURE);
     Page *page = page_manager_get_current_free_page(pm);
     char *d1 = "test 1_";
     char *d2 = "test 2__";
@@ -64,5 +64,5 @@ TEST(test_iterator, basic_iteration) {
 
     item_iterator_destroy(it);
     page_manager_destroy(pm);
-    remove(FILE_PATH);
+    remove(tmpfilename);
 }
