@@ -81,7 +81,7 @@ void handle_get_node_by_filter_request(const Rpc__FilterChain *request, Rpc__Nod
     Node *result = my_alloc(sizeof(Node));
 
     NodeMatcherArray *matcherArray = fs_new_node_matcher_array(request);
-    Result res = document_get_node_by_condition_sequence(g_document, matcherArray, result);
+    Result res = document_get_nodes_by_condition_sequence(g_document, matcherArray, result);
     if (res.status != RES_OK) {
         result->id = NULL_NODE_ID;
         LOG_WARN("[handler] failed to get node by filter: %s", res.message);

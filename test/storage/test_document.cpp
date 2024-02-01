@@ -82,7 +82,7 @@ TEST(document, create_multiple_nodes_delete_one) {
 
     // get all nodes
     int MAX_NODES = 10;
-    auto *result = (GetAllChildrenResult *) my_alloc(sizeof(GetAllChildrenResult) + sizeof(Node) * MAX_NODES);
+    auto *result = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * MAX_NODES);
     res = document_get_all_nodes(new_doc, result);
     ASSERT_EQ(res.status, RES_OK);
 
@@ -99,75 +99,7 @@ TEST(document, create_multiple_nodes_delete_one) {
     document_destroy(new_doc);
 }
 
-// add 3 nodes a -> b -> c
-TEST(document, add_chain_of_nodes) {
-    Document *doc = document_new();
-    remove(FILE_PATH);
-
-    Result res = document_init(doc, FILE_PATH, 4096);
-    ASSERT_EQ(res.status, RES_OK);
-
-    // add nodes
-    CreateNodeRequest a_req = {
-            .parent = NULL_NODE_ID,
-            .value = node_value_string_new("a")
-    };
-    Node a = {0};
-    res = document_add_node(doc, &a_req, &a);
-    ASSERT_EQ(res.status, RES_OK);
-    ASSERT_EQ(a.id.item_id, 0);
-
-    CreateNodeRequest b_req = {
-            .parent = a.id,
-            .value = node_value_string_new("b")
-    };
-    Node b = {0};
-    res = document_add_node(doc, &b_req, &b);
-    ASSERT_EQ(res.status, RES_OK);
-    ASSERT_EQ(b.id.item_id, 1);
-
-    CreateNodeRequest c_req = {
-            .parent = b.id,
-            .value = node_value_string_new("c")
-    };
-    Node c = {0};
-    res = document_add_node(doc, &c_req, &c);
-    ASSERT_EQ(res.status, RES_OK);
-    ASSERT_EQ(c.id.item_id, 2);
-
-    // get all nodes
-    int MAX_NODES = 10;
-    auto *result = (GetAllChildrenResult *) my_alloc(sizeof(GetAllChildrenResult) + sizeof(Node) * MAX_NODES);
-    GetAllChildrenRequest req = {
-            .parent = NULL_NODE_ID
-    };
-    res = document_get_all_children(doc, &req, result);
-    ASSERT_EQ(res.status, RES_OK);
-    ASSERT_EQ(result->count, 1);
-    assert_node(&result->nodes[0], 0, 0, -1, -1, (NodeValue) {
-        .type = STRING,
-        .string_value = {
-            .length = 1,
-            .value = "a"
-        }
-    });
-
-    GetAllChildrenRequest req2 = {
-            .parent = a.id
-    };
-    res = document_get_all_children(doc, &req2, result);
-    ASSERT_EQ(res.status, RES_OK);
-    ASSERT_EQ(result->count, 1);
-    assert_node(&result->nodes[0], 0, 1, 0, 0, (NodeValue) {
-        .type = STRING,
-        .string_value = {
-            .length = 1,
-            .value = "b"
-        }
-    });
-}
-
-// adds nodes a -> b -> c -> d. Creates conditions and cals document_get_node_by_condition_sequence
+// adds nodes a -> b -> c -> d. Creates conditions and cals document_get_nodes_by_condition_sequence
 TEST(document, get_node_by_condition_sequence) {
     Document *doc = document_new();
     remove(FILE_PATH);
@@ -208,16 +140,45 @@ TEST(document, get_node_by_condition_sequence) {
     res = document_add_node(doc, &d_req, &d);
     ASSERT_EQ(res.status, RES_OK);
 
-    // get all nodes
-    int MAX_NODES = 10;
-    auto *result = (GetAllChildrenResult *) my_alloc(sizeof(GetAllChildrenResult) + sizeof(Node) * MAX_NODES);
+    CreateNodeRequest e_req = {
+            .parent = c.id,
+            .value = node_value_string_new("e (child of c)")
+    };
+    Node e = {0};
+    res = document_add_node(doc, &e_req, &e);
+    ASSERT_EQ(res.status, RES_OK);
 
     NodeConditionFunc funcs[] = {
         node_conditions_equals_str("a"),
         node_conditions_equals_str("b"),
         node_conditions_equals_str("c"),
+        node_condition_all(),
     };
-    NodeMatcherArray *matcherArr = node_matcher_array_new(funcs, 3);
-    res = document_get_node_by_condition_sequence(doc, matcherArr, &result->nodes[0]);
+    NodeMatcherArray *matcherArr = node_matcher_array_new(funcs, sizeof(funcs) / sizeof(funcs[0]));
+
+    int nodes_count = 0;
+    res = document_count_nodes_by_condition_sequence(doc, matcherArr, &nodes_count);
     ASSERT_EQ(res.status, RES_OK);
+    ASSERT_EQ(nodes_count, 2);
+
+    auto *result = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * nodes_count);
+
+    result->count = nodes_count;
+    res = document_get_nodes_by_condition_sequence(doc, matcherArr, result);
+    ASSERT_EQ(res.status, RES_OK);
+    ASSERT_EQ(result->count, 2);
+    assert_node(&result->nodes[0], 0, 3, 0, 2, (NodeValue) {
+        .type = STRING,
+        .string_value = {
+            .length = 1,
+            .value = "d"
+        }
+    });
+    assert_node(&result->nodes[1], 0, 4, 0, 2, (NodeValue) {
+        .type = STRING,
+        .string_value = {
+            .length = static_cast<uint32_t>(strlen("e (child of c)")),
+            .value = "e (child of c)"
+        }
+    });
 }

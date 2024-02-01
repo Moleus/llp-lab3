@@ -51,7 +51,7 @@ Document *document_new() {
 void set_root_node(Document *self) {
     self->root_node = my_alloc(sizeof(Node));
     NodeMatcher *matcher = node_matcher_new(node_condition_parent_id_eq(ROOT_NODE_ID));
-    Result res = document_get_node_by_condition(self, matcher, self->root_node);
+    Result res = document_take_first_node_by_condition(self, matcher, self->root_node);
     if (res.status != RES_OK) {
         LOG_WARN("Failed to get root node: %s", res.message);
     }
@@ -175,14 +175,14 @@ NodeConditionFunc node_condition_all(void) {
     });
 }
 
-//Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
+//Result document_get_nodes_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
 Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, int *deleted_count) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(matcher)
     ASSERT_ARG_NOT_NULL(deleted_count)
     assert(self->init_done);
 
-    GetAllChildrenResult *all_children_result = my_alloc(sizeof(GetAllChildrenResult) + sizeof(Node) * 1000);
+    NodesArray *all_children_result = my_alloc(sizeof(NodesArray) + sizeof(Node) * 1000);
     Result res = document_get_all_nodes(self, all_children_result);
     RETURN_IF_FAIL(res, "failed to get all nodes")
 
@@ -326,7 +326,7 @@ Result document_add_bulk_nodes(Document *self, CreateMultipleNodesRequest *reque
     return ERROR("Parent node doesn't exist in document tree");
 }
 
-Result document_get_all_nodes(Document *self, GetAllChildrenResult *result) {
+Result document_get_all_nodes(Document *self, NodesArray *result) {
     GetAllChildrenRequest request = {
             .parent = NULL_NODE_ID
     };
@@ -334,7 +334,7 @@ Result document_get_all_nodes(Document *self, GetAllChildrenResult *result) {
 }
 
 // --- GET ALL CHILDREN ---
-Result document_get_all_children(Document *self, GetAllChildrenRequest *request, GetAllChildrenResult *result) {
+Result document_get_all_children(Document *self, GetAllChildrenRequest *request, NodesArray *result) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(request)
     ASSERT_ARG_NOT_NULL(result)
@@ -372,7 +372,27 @@ Result document_get_all_children(Document *self, GetAllChildrenRequest *request,
     return OK;
 }
 
-Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
+Result document_count_nodes_by_condition(Document *self, NodeMatcher *matcher, int *count) {
+    ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(matcher)
+    ASSERT_ARG_NOT_NULL(count)
+    assert(self->init_done);
+
+    Item item;
+    ItemIterator *items_it = page_manager_get_items(self->page_manager, &item);
+    while (item_iterator_has_next(items_it)) {
+        Result get_item_res = item_iterator_next(items_it, &item);
+        ABORT_IF_FAIL(get_item_res, "failed to bulk add node")
+        Node *tmp_node = item_to_node(item);
+        if (node_condition_matches(matcher, *tmp_node)) {
+            (*count)++;
+        }
+    }
+    item_iterator_destroy(items_it);
+    return OK;
+}
+
+Result document_take_first_node_by_condition(Document *self, NodeMatcher *matcher, Node *result) {
     ASSERT_ARG_NOT_NULL(self)
     ASSERT_ARG_NOT_NULL(matcher)
     ASSERT_ARG_NOT_NULL(result)
@@ -382,7 +402,7 @@ Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node
     ItemIterator *items_it = page_manager_get_items(self->page_manager, &item);
     while (item_iterator_has_next(items_it)) {
         Result get_item_res = item_iterator_next(items_it, &item);
-        RETURN_IF_FAIL(get_item_res, "failed to get node from iterator")
+        ABORT_IF_FAIL(get_item_res, "failed to bulk add node")
         Node *tmp_node = item_to_node(item);
         if (node_condition_matches(matcher, *tmp_node)) {
             *result = *tmp_node;
@@ -391,42 +411,142 @@ Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node
         }
     }
     item_iterator_destroy(items_it);
-    return ERROR("Node doesn't exist in document tree");
+    return ERROR("No nodes found by condition");
 }
 
-
-// takes an array of matchers. Applies first on all nodes, then when condition matches, applies second matcher on children of first node, etc
-// until we satisfy the last matcher or none of the matchers match
-// After the node matches the condition, we add new condition that parent is the previous node id
-// when we match we delete the last condition
-Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray *matchers, Node *result) {
+Result document_get_nodes_by_condition(Document *self, NodeMatcher *matcher, NodesArray *result) {
     ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(matcher)
     ASSERT_ARG_NOT_NULL(result)
+    assert(self->init_done);
+    assert(result->count > 0);
+
+    int i = 0;
+    Item item;
+    ItemIterator *items_it = page_manager_get_items(self->page_manager, &item);
+    while (item_iterator_has_next(items_it)) {
+        Result get_item_res = item_iterator_next(items_it, &item);
+        ABORT_IF_FAIL(get_item_res, "failed to get node from iterator")
+        Node *tmp_node = item_to_node(item);
+        if (node_condition_matches(matcher, *tmp_node)) {
+            result->nodes[i++] = *tmp_node;
+        }
+    }
+    item_iterator_destroy(items_it);
+
+    assert(result->count == i);
+    if (i == 0) {
+        return ERROR("No nodes found by condition");
+    }
+    return OK;
+}
+
+Result document_count_nodes_by_condition_sequence(Document *self, NodeMatcherArray *matchers, int *count_result) {
+    ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(matchers)
+    ASSERT_ARG_NOT_NULL(count_result)
     assert(self->init_done);
 
     Node *current_node = malloc(sizeof(Node));
     ASSERT_NOT_NULL(current_node, FAILED_TO_ALLOCATE_MEMORY)
     *current_node = *self->root_node;
 
-    // TODO: should we start from root or the provided node?
     node_id_t parent_id = NULL_NODE_ID;
+
+    int matched_nodes_count = 0;
 
     for (size_t i = 0; i < matchers->matchers_count; i++) {
         ASSERT_NOT_NULL(matchers->matchers[i], INTERNAL_LIB_ERROR)
         NodeMatcher *matcher = matchers->matchers[i];
-        // match node where parent_id is the previous node id
         node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
-        Result res = document_get_node_by_condition(self, matcher, current_node);
-        if (res.status != RES_OK) {
-            LOG_DEBUG("Failed to get node by condition", "");
+
+        matched_nodes_count = 0;
+        Result res = document_count_nodes_by_condition(self, matcher, &matched_nodes_count);
+        ABORT_IF_FAIL(res, "Failed to count nodes by condition");
+
+        if (matched_nodes_count == 0) {
             free(current_node);
+            *count_result = 0;
+            node_remove_last_condition(matcher);
+            return OK;
+        }
+
+        NodesArray *nodes = my_alloc(sizeof(NodesArray) + sizeof(Node) * matched_nodes_count);
+        nodes->count = matched_nodes_count;
+
+        res = document_get_nodes_by_condition(self, matcher, nodes);
+        ABORT_IF_FAIL(res, "Failed to get node by condition");
+
+        *current_node = nodes->nodes[0];
+        free(nodes);
+
+        parent_id = current_node->id;
+    }
+    *count_result = matched_nodes_count;
+    free(current_node);
+    return OK;
+}
+
+// takes an array of matchers. Applies first on all nodes, then when condition matches, applies second matcher on children of first node, etc
+// until we satisfy the last matcher or none of the matchers match
+// After the node matches the condition, we add new condition that parent is the previous node id
+// when we match we delete the last condition
+Result document_get_nodes_by_condition_sequence(Document *self, NodeMatcherArray *matchers, NodesArray *result) {
+    ASSERT_ARG_NOT_NULL(self)
+    ASSERT_ARG_NOT_NULL(result)
+    assert(self->init_done);
+    assert(result->count > 0);
+
+    Node *current_node = malloc(sizeof(Node));
+    ASSERT_NOT_NULL(current_node, FAILED_TO_ALLOCATE_MEMORY)
+    *current_node = *self->root_node;
+
+    node_id_t parent_id = NULL_NODE_ID;
+
+    NodesArray* nodes_array_buffer = NULL;
+
+    for (size_t i = 0; i < matchers->matchers_count; i++) {
+        ASSERT_NOT_NULL(matchers->matchers[i], INTERNAL_LIB_ERROR)
+        NodeMatcher *matcher = matchers->matchers[i];
+        node_add_condition(matcher, node_condition_parent_id_eq(parent_id));
+
+        int matched_nodes_count = 0;
+        Result res = document_count_nodes_by_condition(self, matcher, &matched_nodes_count);
+        ABORT_IF_FAIL(res, "Failed to count nodes by condition");
+
+        if (matched_nodes_count == 0) {
+            free(current_node);
+            node_remove_last_condition(matcher);
+            return ERROR("No nodes found by condition");
+        }
+
+        if (i == matchers->matchers_count - 1) {
+            // last matcher
+            assert(result->count == matched_nodes_count);
+            nodes_array_buffer = result;
+        } else {
+            nodes_array_buffer = my_alloc(sizeof(NodesArray) + sizeof(Node) * matched_nodes_count);
+        }
+
+        nodes_array_buffer->count = matched_nodes_count;
+        res = document_get_nodes_by_condition(self, matcher, nodes_array_buffer);
+        if (res.status != RES_OK) {
+            LOG_DEBUG("Failed to get node by condition: %s", res.message);
+            free(current_node);
+            node_remove_last_condition(matcher);
             return res;
         }
         node_remove_last_condition(matcher);
+
+        if (i != matchers->matchers_count - 1) {
+            // free intermediate buffer
+            *current_node = nodes_array_buffer->nodes[0];
+            free(nodes_array_buffer);
+        }
+
         parent_id = current_node->id;
     }
 
-    *result = *current_node;
     free(current_node);
     return OK;
 }

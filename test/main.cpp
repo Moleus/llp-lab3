@@ -4,7 +4,7 @@ extern "C" {
 #include "public/util/log.h"
 }
 
-unsigned char log_level = DEBUG;
+unsigned char log_level = INFO;
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
