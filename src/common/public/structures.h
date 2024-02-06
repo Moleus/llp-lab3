@@ -67,3 +67,7 @@ typedef enum {
 FileInfoAttributes file_info_attribute_from_string(char* attribute);
 
 bool file_info_attribute_matches(FileInfoAttributes attr, char* value, FileInfo file_info);
+
+FileInfo file_info_set_attribute(FileInfo file_info, FileInfoAttributes attr, char* value);
+
+void file_info_to_string(FileInfo file_info, char* buffer);

@@ -9,6 +9,9 @@
 
 #define AUTO_RECONNECT_PERIOD_MS 10
 
+
+Rpc__Nodes *g_get_nodes_response = NULL;
+
 static void die(const char *msg) {
     fprintf(stderr, "%s\n", msg);
     exit(EXIT_FAILURE);
@@ -76,6 +79,7 @@ static void handle_get_response(const Rpc__Nodes *response, void *closure_data) 
     if (response == NULL) {
         printf("Error processing request.\n");
     } else {
+        g_get_nodes_response = response;
         printf("Nodes count: %zu\n", response->n_nodes);
         for (size_t i = 0; i < response->n_nodes; i++) {
             Rpc__Node *node = response->nodes[i];
@@ -85,7 +89,9 @@ static void handle_get_response(const Rpc__Nodes *response, void *closure_data) 
             printf("Data: %s\n", nodeValue->string_value);
         }
     }
-    *(protobuf_c_boolean *) closure_data = 1;
+    Closure *closure = (Closure*) closure_data;
+    closure->is_done = 1;
+    closure->response = (void*) response;
 }
 
 static void handle_delete_nodes_response(const Rpc__DeletedNodes *response, void *closure_data) {
@@ -108,11 +114,11 @@ void client_add_node(ClientService *self, CreateNodeRequest *request) {
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
 
-void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters) {
-    protobuf_c_boolean is_done = 0;
+void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters, Rpc__Nodes *result_buffer) {
+    Closure closure = {result_buffer, 0};
     printf("client_get_node_by_filter\n");
-    rpc__database__get_nodes_by_filter(self->service, filters, handle_get_response, &is_done);
-    while (!is_done)
+    rpc__database__get_nodes_by_filter(self->service, filters, handle_get_response, &closure);
+    while (!closure.is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
 

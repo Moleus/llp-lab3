@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "structures.h"
 #include "public/util/log.h"
+#include "public/util/memory.h"
 
 NodeValue node_value_string_new(char *string) {
     assert(strlen(string) < 256);
@@ -14,20 +15,45 @@ NodeValue node_value_string_new(char *string) {
     return nodeValue;
 }
 
-FileInfo parse_file_info(char* file_info) {
-    char* name = strtok(file_info, " ");
-    char* owner = strtok(NULL, " ");
-    char* access_time = strtok(NULL, " ");
-    char* mime_type = strtok(NULL, " ");
+FileInfo parse_file_info(char *file_info) {
+    char *name = strtok(file_info, " ");
+    char *owner = strtok(NULL, " ");
+    char *access_time = strtok(NULL, " ");
+    char *mime_type = strtok(NULL, " ");
     return (FileInfo) {
-        .name = name,
-        .owner = owner,
-        .access_time = access_time,
-        .mime_type = mime_type
+            .name = name,
+            .owner = owner,
+            .access_time = access_time,
+            .mime_type = mime_type
     };
 }
 
-FileInfoAttributes file_info_attribute_from_string(char* attribute) {
+void file_info_to_string(FileInfo file_info, char* buffer) {
+    sprintf(buffer, "%s %s %s %s", file_info.name, file_info.owner, file_info.access_time, file_info.mime_type);
+}
+
+FileInfo file_info_set_attribute(FileInfo file_info, FileInfoAttributes attr, char *value) {
+    switch (attr) {
+        case FILE_INFO_NAME:
+            file_info.name = value;
+            break;
+        case FILE_INFO_OWNER:
+            file_info.owner = value;
+            break;
+        case FILE_INFO_ACCESS_TIME:
+            file_info.access_time = value;
+            break;
+        case FILE_INFO_MIME_TYPE:
+            file_info.mime_type = value;
+            break;
+        default:
+            LOG_ERR("Unknown file info attribute: %d", attr);
+            exit(1);
+    }
+    return file_info;
+}
+
+FileInfoAttributes file_info_attribute_from_string(char *attribute) {
     if (strcmp(attribute, "name") == 0) {
         return FILE_INFO_NAME;
     } else if (strcmp(attribute, "owner") == 0) {
@@ -42,7 +68,7 @@ FileInfoAttributes file_info_attribute_from_string(char* attribute) {
     }
 }
 
-bool file_info_attribute_matches(FileInfoAttributes attr, char* value, FileInfo file_info) {
+bool file_info_attribute_matches(FileInfoAttributes attr, char *value, FileInfo file_info) {
     switch (attr) {
         bool result;
         case FILE_INFO_NAME:

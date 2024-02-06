@@ -21,21 +21,17 @@ void fill_with_data(ClientService *client) {
 int main(int argc, char **argv) {
     char *address = "127.0.0.1:9096";
 
-    char *command = "hosts\n";
-    Query *q = parser_parse_command(command);
-//
-    Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
-
     ClientService *service = client_service_new(address);
 
+    // setup
     client_delete_all_nodes(service);
     fill_with_data(service);
+
     for (;;) {
-//        Query query = parse();
-
+        char *command = "create(ssl[name=a1][owner=root][access_time=1705324315][mime_type=text/plain])\n";
+        Query *query = parser_parse_command(command);
         run_main_loop(service);
-
-        client_get_node_by_filter(service, chain);
+        make_request_based_on_query(query, service);
         sleep(5);
     }
 }
