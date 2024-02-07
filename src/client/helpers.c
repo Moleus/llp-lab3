@@ -117,8 +117,8 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     // if node doesn't exist then fail
 
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
-    Rpc__Nodes *nodes = NULL;
-    client_get_node_by_filter(client, chain, nodes);
+    Rpc__Nodes *nodes = my_alloc(sizeof(Rpc__Nodes));
+    client_get_node_by_filter(client, chain, &nodes);
     assert(nodes != NULL);
     if (nodes->n_nodes == 0) {
         printf("Node doesn't exist\n");
@@ -141,5 +141,6 @@ void add_nodes_sequence(Query *q, ClientService *client) {
 
 void get_nodes(Query *q, ClientService *client) {
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
-    client_get_node_by_filter(client, chain);
+    Rpc__Nodes result;
+    client_get_node_by_filter(client, chain, &result);
 }

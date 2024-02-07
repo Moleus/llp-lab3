@@ -6,16 +6,11 @@ extern "C" {
 #include "parser/types.h"
 #include "public/util/memory.h"
 #include "converters.h"
+#include "parser/my_parser.h"
 }
 
 #define PAGE_SIZE 4096
 #define SIGNATURE 0x12345678
-
-//typedef struct ParsedNode {
-//    char *name;
-//    struct ParsedNode *next;
-//    Filter* filters;
-//} ParsedNode;
 
 TEST(client, convertNodesToFilterChain) {
     // /etc/local/hosts
@@ -37,4 +32,35 @@ TEST(client, convertNodesToFilterChain) {
         ASSERT_EQ(chain->filters[i]->string_argument, names[i]);
         ASSERT_EQ(strcmp(chain->filters[i]->name, "name"), 0);
     }
+}
+
+TEST(client, simple_command) {
+    char *command = "ssl\n";
+    Query *query = parser_parse_command(command);
+    ClientService *client = client_service_new("localhost:50051");
+    make_request_based_on_query(query, client);
+}
+
+TEST(client, parse_multiple_filters) {
+    char *command = "create(ssl[@name=a1][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
+
+    Query *query = parser_parse_command(command);
+    Filter *f = query->nodes->filters;
+
+    ASSERT_EQ(query->func, CREATE_OP);
+    ASSERT_STREQ(query->nodes->name, "ssl");
+
+    ASSERT_STREQ(f->filter->left.name, "name");
+    ASSERT_STREQ(f->filter->right->string, "a1");
+    f = f->next;
+    ASSERT_STREQ(f->filter->left.name, "owner");
+    ASSERT_STREQ(f->filter->right->string, "root");
+    f = f->next;
+    ASSERT_STREQ(f->filter->left.name, "access_time");
+    ASSERT_STREQ(f->filter->right->string, "1705324315");
+    f = f->next;
+    ASSERT_STREQ(f->filter->left.name, "mime_type");
+    ASSERT_STREQ(f->filter->right->string, "text/plain");
+
+    ASSERT_EQ(f->next, nullptr);
 }

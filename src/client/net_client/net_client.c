@@ -57,7 +57,7 @@ void run_main_loop(ClientService *self) {
 static void handle_create_response(const Rpc__Node *response, void *closure_data) {
     LOG_INFO("handle_create_response\n", "");
     if (response == NULL) {
-        LOG_INFO("Error processing request.\n", "");
+        LOG_WARN("Error processing request.\n", "");
     } else {
         node_id_t node_id = convert_from_rpc_nodeId(response->id);
         LOG_INFO("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
@@ -114,7 +114,7 @@ void client_add_node(ClientService *self, CreateNodeRequest *request) {
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
 
-void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters, Rpc__Nodes *result_buffer) {
+void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters, Rpc__Nodes **result_buffer) {
     Closure closure = {result_buffer, 0};
     printf("client_get_node_by_filter\n");
     rpc__database__get_nodes_by_filter(self->service, filters, handle_get_response, &closure);

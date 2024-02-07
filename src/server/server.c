@@ -91,7 +91,15 @@ void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__No
     }
     LOG_INFO("[handler] nodes count: %d", nodes_count);
 
-    NodesArray *result = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * nodes_count);
+    // TODO: if user condition doesn't match any nodes. Return empty
+    // TODO: handle on client-side
+    if (nodes_count == 0) {
+        Rpc__Nodes tmp_result = RPC__NODES__INIT;
+        *response = tmp_result;
+        return;
+    }
+
+    NodesArray *result = nodes_array_new(nodes_count);
 
     result->count = nodes_count;
     res = document_get_nodes_by_condition_sequence(g_document, matcherArray, result);

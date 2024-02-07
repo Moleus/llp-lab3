@@ -85,3 +85,9 @@ bool file_info_attribute_matches(FileInfoAttributes attr, char *value, FileInfo 
             exit(1);
     }
 }
+
+NodesArray *nodes_array_new(size_t count) {
+    NodesArray *arr = my_alloc(sizeof(NodesArray) + sizeof(Node) * count);
+    arr->count = count;
+    return arr;
+}

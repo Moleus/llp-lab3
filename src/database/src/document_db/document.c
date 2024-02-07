@@ -186,8 +186,7 @@ Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, 
             DeleteNodeRequest delete_request = {
                     .node_id = node->id
             };
-            Node result = {0};
-            res = document_delete_node(self, &delete_request, &result);
+            res = delete_node_with_all_descendants(self, node, deleted_count);
             RETURN_IF_FAIL(res, "failed to delete node")
             (*deleted_count)++;
         }
@@ -196,10 +195,29 @@ Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, 
     return OK;
 }
 
-Result document_delete_all_nodes(Document *self, int*deleted_count) {
-    NodeMatcher *all_matcher = node_matcher_new(node_condition_all());
-    Result res = document_delete_nodes_by_condition(self, all_matcher, deleted_count);
-    node_matcher_destroy(all_matcher);
+Result delete_node_with_all_descendants(Document *self, Node *node, int *deleted_count) {
+    int children_count = 0;
+    Result res = document_count_children(self, node->id, &children_count);
+    ABORT_IF_FAIL(res, "Failed to count children of node");
+    if (children_count > 0) {
+        LOG_WARN("[document] Node (%d/%d) with value %s contains %d children", node->id.page_id, node->id.item_id,
+                 node->value.string_value.value, children_count);
+        NodesArray *children = nodes_array_new(children_count);
+        NodeMatcher *matcher = node_matcher_new(node_condition_parent_id_eq(node->id));
+        res = document_get_nodes_by_condition(self, matcher, children);
+        ABORT_IF_FAIL(res, "Failed to get children of node");
+
+        for (size_t i = 0; i < children->count; i++) {
+            Node *child = &children->nodes[i];
+            res = delete_node_with_all_descendants(self, child, deleted_count);
+            ABORT_IF_FAIL(res, "Failed to delete node");
+        }
+    }
+
+    // has no children
+    (*deleted_count)++;
+    res = document_delete_node(self, &(DeleteNodeRequest) {.node_id = node->id}, node);
+    ABORT_IF_FAIL(res, "Trying to delete node with not children");
     return res;
 }
 
@@ -221,12 +239,12 @@ Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *re
         if (node_id_eq(tmp_node->parent_id, request->node_id)) {
             // We are trying to delete node with children
             item_iterator_destroy(items_it);
-            ABORT_EXIT(INTERNAL_LIB_ERROR, "Node contains children")
+            LOG_WARN("Can't delete node with childen: %d/%d; child value: %s", request->node_id.page_id, request->node_id.item_id, tmp_node->value.string_value.value);
+            ABORT_EXIT(INTERNAL_LIB_ERROR, "Can't delete node with children");
         }
     }
     item_iterator_destroy(items_it);
     return document_delete_second_step(self, request);
-
 }
 
 Result document_delete_second_step(Document *self, DeleteNodeRequest *request) {
@@ -364,6 +382,11 @@ Result document_get_all_children(Document *self, GetAllChildrenRequest *request,
     item_iterator_destroy(items_it);
     // didn't find parent node
     return OK;
+}
+
+Result document_count_children(Document *self, node_id_t parent_id, int *children_result) {
+    NodeMatcher *matcher = node_matcher_new(node_condition_parent_id_eq(parent_id));
+    return document_count_nodes_by_condition(self, matcher, children_result);
 }
 
 Result document_count_nodes_by_condition(Document *self, NodeMatcher *matcher, int *count) {

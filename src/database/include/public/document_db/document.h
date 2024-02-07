@@ -63,3 +63,7 @@ Result document_get_nodes_by_condition_sequence(Document *self, NodeMatcherArray
 
 Result document_take_first_node_by_condition(Document *self, NodeMatcher *matcher, Node *result);
 NodeConditionFunc node_condition_all(void);
+
+Result document_count_children(Document *self, node_id_t parent_id, int *children_result);
+
+Result delete_node_with_all_descendants(Document *self, Node *node, int *deleted_count);

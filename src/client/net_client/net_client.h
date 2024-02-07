@@ -25,6 +25,6 @@ void client_get_all(ClientService *self);
 
 void client_get_node_by_names_path(ClientService *self, char *path);
 
-void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters, Rpc__Nodes *result_buffer);
+void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters, Rpc__Nodes **result_buffer);
 
 void run_main_loop(ClientService *self);

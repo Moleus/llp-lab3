@@ -1,5 +1,6 @@
 #include "types.h"
 #include "assert.h"
+#include "../../common/public/util/memory.h"
 
 size_t g_malloc_bytes = 0;
 
@@ -99,6 +100,12 @@ FunctionType get_function_type(char *func) {
 }
 
 void add_node(Query *query, char *node) {
+    if (query->nodes != NULL && strcmp(query->nodes->name, "_root") == 0) {
+        // filter already applied
+        query->nodes->name = strdup(node);
+        return;
+    }
+
     ParsedNode *new_node = my_malloc(sizeof(ParsedNode));
     new_node->name = strdup(node);
 
@@ -114,6 +121,12 @@ void add_node(Query *query, char *node) {
 }
 
 void add_filter(Query *query, Filter *filter) {
+    // если фильтр на первой ноде, то ноды еще нет. Нода будет создана
+    // TODO: query->nodes is null
+    if (query->nodes == NULL) {
+        query->nodes = my_alloc(sizeof(ParsedNode));
+        query->nodes->name = strdup("_root");
+    }
     ParsedNode *cur_node = query->nodes;
     assert(cur_node != NULL);
     while (cur_node->next != NULL) {
