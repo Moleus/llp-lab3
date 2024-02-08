@@ -167,7 +167,7 @@ Rpc__Nodes converters_copy_nodes(Rpc__Nodes nodes) {
     result.nodes = my_alloc(sizeof(Rpc__Node*) * nodes.n_nodes);
     for (int i = 0; i < nodes.n_nodes; i++) {
         result.nodes[i] = my_alloc(sizeof(Rpc__Node));
-        result.nodes[i] = nodes.nodes[i];
+        *result.nodes[i] = *nodes.nodes[i];
     }
     return result;
 }

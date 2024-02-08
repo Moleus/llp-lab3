@@ -85,14 +85,13 @@ void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__No
     NodeMatcherArray *matcherArray = fs_new_node_matcher_array(request);
 
     int nodes_count = 0;
+    // TODO: returns 0 on /ssl when not restarted
     Result res = document_count_nodes_by_condition_sequence(g_document, matcherArray, &nodes_count);
     if (res.status != RES_OK) {
         LOG_ERR("[handler] failed to count nodes by filter: %s", res.message);
     }
     LOG_INFO("[handler] nodes count: %d", nodes_count);
 
-    // TODO: if user condition doesn't match any nodes. Return empty
-    // TODO: handle on client-side
     if (nodes_count == 0) {
         Rpc__Nodes tmp_result = RPC__NODES__INIT;
         *response = tmp_result;
