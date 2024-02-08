@@ -2,7 +2,6 @@
 #include "converters.h"
 #include "public/util/memory.h"
 #include "helpers.h"
-#include "net_client.h"
 #include "public/util/log.h"
 #include "public/util/helpers.h"
 
@@ -16,7 +15,6 @@ char *files[] = {
         "shadow root 1705324315 text/plain",
         "gshadow root 1705324315 text/plain",
 };
-
 
 // each element has information about parent and file system information
 Requests generate_requests() {
@@ -37,6 +35,8 @@ Requests generate_requests() {
         .create = requests
     };
 }
+
+
 
 // takes last node from path
 Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
@@ -135,14 +135,14 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     // if node doesn't exist then fail
 
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
-    Rpc__Nodes *nodes = my_alloc(sizeof(Rpc__Nodes));
-    client_get_node_by_filter(client, chain, &nodes);
-    assert(nodes != NULL);
-    if (nodes->n_nodes == 0) {
-        printf("Node doesn't exist\n");
+    // TODO: get returned node
+    client_get_node_by_filter(client, chain);
+    Rpc__Nodes nodes = g_get_nodes_response;
+    if (nodes.n_nodes == 0) {
+        LOG_WARN("Node doesn't exist\n", "");
         return;
     }
-    node_id_t parent_id = convert_from_rpc_nodeId(nodes->nodes[0]->id);
+    node_id_t parent_id = convert_from_rpc_nodeId(nodes.nodes[0]->id);
 
     char *buffer = my_alloc(256);
     Filter *last_node_filters = parsed_node_get_last(pNode)->filters;
@@ -160,5 +160,5 @@ void add_nodes_sequence(Query *q, ClientService *client) {
 void get_nodes(Query *q, ClientService *client) {
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
     Rpc__Nodes result;
-    client_get_node_by_filter(client, chain, &result);
+    client_get_node_by_filter(client, chain);
 }

@@ -85,7 +85,7 @@ bool item_iterator_has_next(ItemIterator *self) {
     }
 
     Page *prev_page = cur_page;
-    item_index_t last_item_on_prev_page = item_id(page_get_id(prev_page), self->current_item_index);
+//    item_index_t last_item_on_prev_page = item_id(page_get_id(prev_page), self->current_item_index);
     // Если на этой странице больше нет элементов - надо проверить на следующей
     // нужно загрузить следующую страницу и проверить, что кол-во элементов в ней больше 0
     // надо проверять следующие страницы, пока не найдем страницу с элементами или кол-во страниц не закончится
@@ -95,27 +95,27 @@ bool item_iterator_has_next(ItemIterator *self) {
         Result res = page_iterator_next(self->page_iterator, &cur_page);
         ABORT_IF_FAIL(res, "Failed to get next page")
         // смотрим на нулевой элемент на странице
-        ItemMetadata *prev_item_metadata = get_metadata(prev_page, last_item_on_prev_page);
+//        ItemMetadata *prev_item_metadata = get_metadata(prev_page, last_item_on_prev_page);
         if (cur_page->page_header.items_count > 0) {
-            if (prev_item_metadata->continues_on_page.id != page_get_id(cur_page).id) {
+//            if (prev_item_metadata->continues_on_page.id != page_get_id(cur_page).id) {
                 // Это новый отдельный элемент. Берем
                 LOG_DEBUG("ItemIterator - found item on page %d", cur_page->page_header.page_id.id);
                 self->current_item_index = -1;
                 return true;
-            }
+//            }
             // Продолжение предыдущего элемента
-            if (cur_page->page_header.items_count == 1) {
-                // продолжение занимает всю страницу, итерируемся дальше по страницам
-                LOG_DEBUG("ItemIterator - Page %d has only one element and it's continuation of %d",
-                          page_get_id(cur_page).id,
-                          self->current_item_index);
-                continue;
-            }
+//            if (cur_page->page_header.items_count == 1) {
+//                // продолжение занимает всю страницу, итерируемся дальше по страницам
+//                LOG_DEBUG("ItemIterator - Page %d has only one element and it's continuation of %d",
+//                          page_get_id(cur_page).id,
+//                          self->current_item_index);
+//                continue;
+//            }
 
             // Продолжение занимает часть страницы, значит берем следующий элемент
-            LOG_DEBUG("ItemIterator - found item on page %d", cur_page->page_header.page_id.id);
-            self->current_item_index = 1;
-            return true;
+//            LOG_DEBUG("ItemIterator - found item on page %d", cur_page->page_header.page_id.id);
+//            self->current_item_index = 1;
+//            return true;
         }
     }
     return false;

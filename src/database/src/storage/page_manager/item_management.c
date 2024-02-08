@@ -82,10 +82,11 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
                                                    &tmp_add_result);
         ABORT_IF_FAIL(res, "Failed to add item to page in memory")
 
-        if (page == current_page) {
-            // first page. Save result
-            *item_add_result = tmp_add_result;
-        }
+//        if (page != current_page) {
+//            ABORT_EXIT(INTERNAL_LIB_ERROR, "We use one page per item");
+//        }
+        // first page. Save result
+        *item_add_result = tmp_add_result;
         assert(tmp_add_result.write_status.bytes_written == payload_to_write.size);
         bytes_written += tmp_add_result.write_status.bytes_written;
         current_page = free_page;

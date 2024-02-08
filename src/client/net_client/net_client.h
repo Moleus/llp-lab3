@@ -2,8 +2,9 @@
 
 #include "converters.h"
 
+extern Rpc__Nodes g_get_nodes_response;
+
 typedef struct {
-    void *response;
     protobuf_c_boolean is_done;
 } Closure;
 
@@ -25,6 +26,6 @@ void client_get_all(ClientService *self);
 
 void client_get_node_by_names_path(ClientService *self, char *path);
 
-void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters, Rpc__Nodes **result_buffer);
+void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters);
 
 void run_main_loop(ClientService *self);

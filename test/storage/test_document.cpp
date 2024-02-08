@@ -84,6 +84,57 @@ TEST(document, create_multiple_nodes_delete_one) {
     remove(tmpfilename);
 }
 
+/*
+ * 3 pages with 3 nodes each
+ * delete second node from second page
+ * add new node
+ */
+TEST(document, multipage_add_on_middle_page_after_delete) {
+    int page_size = 400;
+    char *tmpfilename = tmpnam(NULL);
+    Document *doc = document_new();
+    Result res = document_init(doc, tmpfilename, page_size);
+    ASSERT_EQ(res.status, RES_OK);
+
+
+    Node nodes[3];
+    node_id_t parent = NULL_NODE_ID;
+    char *values[3] = {"a", "b", "c"};
+    for (int i = 0; i < 3; i++) {
+        if (i > 0) {
+            parent = (node_id_t ) {.page_id = 0, .item_id = 0};
+        }
+        CreateNodeRequest req = {
+                .parent = parent,
+                .value = node_value_string_new(values[i]) // 256 bytes
+        };
+        res = document_add_node(doc, &req, &nodes[i]);
+        ASSERT_EQ(res.status, RES_OK);
+    }
+    ASSERT_EQ(nodes[0].id.page_id, 0);
+    ASSERT_EQ(nodes[1].id.page_id, 1);
+    ASSERT_EQ(nodes[2].id.page_id, 2);
+
+    // delete second node
+    DeleteNodeRequest delete_req = {
+            .node_id = nodes[1].id,
+    };
+    Node deleted_node = {0};
+    res = document_delete_node(doc, &delete_req, &deleted_node);
+    ASSERT_EQ(res.status, RES_OK);
+
+    // add new node
+    CreateNodeRequest req = {
+            .parent = nodes[0].id,
+            .value = node_value_string_new("b")
+    };
+    Node new_node = {0};
+    res = document_add_node(doc, &req, &new_node);
+    ASSERT_EQ(res.status, RES_OK);
+    ASSERT_EQ(new_node.id.page_id, 3);
+    ASSERT_EQ(new_node.id.item_id, 0);
+}
+
 // adds nodes a -> b -> c -> d. Creates conditions and cals document_get_nodes_by_condition_sequence
 TEST(document, get_node_by_condition_sequence) {
     char *tmpfilename = tmpnam(NULL);

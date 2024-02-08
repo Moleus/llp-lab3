@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     fill_with_data(service);
 
     char *command = "create(ssl[@name=a1][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
-    char *get_cmd = "ssl\n";
+    char *get_cmd = "ssl[*]\n";
     Query *query = parser_parse_command(command);
     Query *get_cmd_q = parser_parse_command(get_cmd);
     make_request_based_on_query(query, service);
