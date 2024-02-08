@@ -47,6 +47,7 @@ typedef struct {
 
 NodesArray *nodes_array_new(size_t count);
 
+
 NodeValue node_value_string_new(char *string);
 Node *node_string_new(char *string);
 

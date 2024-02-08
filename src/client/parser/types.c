@@ -87,6 +87,16 @@ Filter* create_filter_by_var_name(char *var_name) {
     return filter;
 }
 
+Filter* create_filter_all() {
+    Filter *filter = my_malloc(sizeof(Filter));
+    FilterExpr *filter_expr = my_malloc(sizeof(FilterExpr));
+    filter_expr->operation = ALL_OP;
+    filter_expr->type = SELECT_BY_PROP_NAME;
+    filter->filter = filter_expr;
+    filter_expr->right = NULL;
+    return filter;
+}
+
 FunctionType get_function_type(char *func) {
     if (strcmp(func, "update") == 0) {
         return UPDATE_OP;

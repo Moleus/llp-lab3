@@ -14,6 +14,7 @@
 "//" { return SLASHSLASH; }
 "/" { return SLASH; }
 "@" { return AT; }
+"*" { return ASTERISK; }
 
 "="  {yylval.int_value = 0; return EQUALS_T;}
 "!=" {yylval.int_value = 1; return NOT_EQUALS_T;}

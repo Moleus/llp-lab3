@@ -26,19 +26,18 @@ NodeConditionFunc fs_new_attribute_condition(char *attribute, char *value) {
 // creates matcher based on selector field of each filter. It's either identifier (file name) or argument value
 NodeMatcherArray *fs_new_node_matcher_array(const Rpc__FilterChain *filter_chain) {
     // TODO: полседний фильтр - получение всех детей
-    NodeConditionFunc conditions[filter_chain->n_filters + 1];
+    NodeConditionFunc conditions[filter_chain->n_filters];
     for (int i = 0; i < filter_chain->n_filters; i++) {
         Rpc__Filter *filter = filter_chain->filters[i];
-        if (filter->field_name_case == RPC__FILTER__FIELD_NAME__NOT_SET) {
-            ABORT_EXIT(SERVER_ERROR, "Filter field name not set")
-        }
         if (filter->type == RPC__FILTER__TYPE__ALL) {
             conditions[i] = node_condition_all();
         } else {
+            if (filter->field_name_case == RPC__FILTER__FIELD_NAME__NOT_SET) {
+                ABORT_EXIT(SERVER_ERROR, "Filter field name not set")
+            }
             conditions[i] = fs_new_attribute_condition(filter->name, filter->string_argument);
         }
     }
-    conditions[filter_chain->n_filters] = node_condition_all();
 
-    return node_matcher_array_new(conditions, (int) filter_chain->n_filters + 1);
+    return node_matcher_array_new(conditions, (int) filter_chain->n_filters);
 }

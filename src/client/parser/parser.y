@@ -103,6 +103,9 @@ filter_expr
     | attribute compare_op node_value {
         $$ = create_filter($1, $2, $3);
     }
+    | ASTERISK {
+        $$ = create_filter_all();
+    }
     ;
 
 node_value

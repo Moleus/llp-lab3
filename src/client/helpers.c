@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "net_client.h"
 #include "public/util/log.h"
+#include "public/util/helpers.h"
 
 char *files[] = {
         "ssl root 1705324315 inode/directory",
@@ -39,12 +40,21 @@ Requests generate_requests() {
 
 // takes last node from path
 Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
+    ASSERT_ARG_NOT_NULL(nodes);
+
     ParsedNode *cur_node = nodes;
-    int node_names_count = 1;
-    while (cur_node != NULL) {
+    int node_names_count = 1; // minimum one node
+    node_names_count++; // plus root node
+    while (cur_node->next != NULL) {
         node_names_count++;
         cur_node = cur_node->next;
     }
+
+    ParsedNode *last_node = cur_node;
+
+    cur_node = my_alloc(sizeof(ParsedNode));
+    cur_node->name = "/";
+    cur_node->next = nodes;
 
     Rpc__FilterChain *filter_chain = my_alloc(sizeof(Rpc__FilterChain));
     Rpc__FilterChain tmp_chain = RPC__FILTER_CHAIN__INIT;
@@ -52,10 +62,8 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
     filter_chain->n_filters = node_names_count;
     filter_chain->filters = my_alloc(sizeof(Rpc__Filter*) * node_names_count);
 
-    cur_node = my_alloc(sizeof(ParsedNode));
-    cur_node->name = "/";
-    cur_node->next = nodes;
-
+    // a/b[*] -> output all children of b
+    // a/b -> output b
     int i = 0;
     while (cur_node != NULL) {
         Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
@@ -70,6 +78,16 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
         i++;
         cur_node = cur_node->next;
     }
+
+    if (last_node->filters != NULL && last_node->filters->filter->operation == ALL_OP) {
+        Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
+        Rpc__Filter tmp = RPC__FILTER__INIT;
+        *filter = tmp;
+        filter->type = RPC__FILTER__TYPE__ALL;
+        filter_chain->filters[i] = filter;
+        filter_chain->n_filters++;
+    }
+
     return filter_chain;
 }
 

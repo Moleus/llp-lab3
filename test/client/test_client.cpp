@@ -35,10 +35,16 @@ TEST(client, convertNodesToFilterChain) {
 }
 
 TEST(client, simple_command) {
-    char *command = "ssl\n";
+    char *command = "ssl[*]\n";
     Query *query = parser_parse_command(command);
-    ClientService *client = client_service_new("localhost:50051");
-    make_request_based_on_query(query, client);
+
+    Rpc__FilterChain *chain = convertNodesToFilterChain(query->nodes);
+
+    ASSERT_EQ(query->func, NOP);
+    ASSERT_EQ(chain->n_filters, 3);
+    ASSERT_STREQ(chain->filters[0]->string_argument, "/");
+    ASSERT_STREQ(chain->filters[1]->string_argument, "ssl");
+    ASSERT_EQ(chain->filters[2]->type, RPC__FILTER__TYPE__ALL);
 }
 
 TEST(client, parse_multiple_filters) {
