@@ -6,32 +6,35 @@
 #include "public/util/helpers.h"
 
 char *files[] = {
-        "ssl root 1705324315 inode/directory",
-        "timezone root 1705324315 text/plain",
-        "hosts root 1705324315 text/plain",
-        "passwd root 1705324315 text/plain",
-        "group root 1705324315 text/plain",
-        "fstab root 1705324315 text/plain",
-        "shadow root 1705324315 text/plain",
-        "gshadow root 1705324315 text/plain",
+        "ssl root 1705324315 inode.directory",
+        "timezone root 1705324315 text.plain",
+        "hosts root 1705324315 text.plain",
+        "passwd root 1705324315 text.plain",
+        "group root 1705324315 text.plain",
+        "fstab root 1705324315 text.plain",
+        "shadow root 1705324315 text.plain",
+        "gshadow root 1705324315 text.plain",
 };
 
 // each element has information about parent and file system information
 Requests generate_requests() {
     // hardcoded sample data
     // root
+    int size = 8 + 2;
     CreateNodeRequest root = {.parent = {.page_id = -1, .item_id = -1}, .value = node_value_string_new("/ root 1705324315 inode/directory")};
+    CreateNodeRequest subroot = {.parent = {.page_id = 0, .item_id = 0}, .value = node_value_string_new("root root 1705324315 inode/directory")};
 
-    CreateNodeRequest *requests = my_alloc(sizeof(CreateNodeRequest) * 9);
+    CreateNodeRequest *requests = my_alloc(sizeof(CreateNodeRequest) * size);
     requests[0] = root;
+    requests[1] = subroot;
 
-    for (int i = 0; i < 8; i++) {
-        CreateNodeRequest request = {.parent = {.page_id = 0, .item_id = 0}, .value = node_value_string_new(files[i])};
-        requests[i+1] = request;
+    for (int i = 0; i < size - 2; i++) {
+        CreateNodeRequest request = {.parent = {.page_id = 0, .item_id = 1}, .value = node_value_string_new(files[i])};
+        requests[i+2] = request;
     }
 
     return (Requests) {
-        .count = 9,
+        .count = size,
         .create = requests
     };
 }
@@ -100,6 +103,7 @@ void make_request_based_on_query(Query *q, ClientService *client) {
             add_nodes_sequence(q, client);
             break;
         case DELETE_OP:
+            delete_node_sequence(q, client);
             break;
         case UPDATE_OP:
             break;
@@ -155,6 +159,22 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     };
 
     client_add_node(client, &request);
+}
+
+void delete_node_sequence(Query *q, ClientService *client) {
+    Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
+//    client_get_node_by_filter(client, chain);
+//    Rpc__Nodes nodes = g_get_nodes_response;
+//    if (nodes.n_nodes == 0) {
+//        LOG_WARN("Node doesn't exist\n", "");
+//        return;
+//    }
+//    node_id_t node_id = convert_from_rpc_nodeId(nodes.nodes[0]->id);
+//    DeleteNodeRequest request = {
+//        .node_id = node_id
+//    };
+//    client_delete_node(client, &request);
+    client_delete_node_by_filter(client, chain);
 }
 
 void get_nodes(Query *q, ClientService *client) {
