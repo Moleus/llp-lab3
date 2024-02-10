@@ -48,7 +48,7 @@ TEST(client, simple_command) {
 }
 
 TEST(client, parse_multiple_filters) {
-    char *command = "create(ssl[@name=a1][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
+    char *command = "create(ssl[@name=a1][@owner=root][@access_time=1705324315][@mime_type=text.plain])\n";
 
     Query *query = parser_parse_command(command);
     Filter *f = query->nodes->filters;
@@ -66,7 +66,7 @@ TEST(client, parse_multiple_filters) {
     ASSERT_STREQ(f->filter->right->string, "1705324315");
     f = f->next;
     ASSERT_STREQ(f->filter->left.name, "mime_type");
-    ASSERT_STREQ(f->filter->right->string, "text/plain");
+    ASSERT_STREQ(f->filter->right->string, "text.plain");
 
     ASSERT_EQ(f->next, nullptr);
 }
