@@ -13,6 +13,8 @@
 unsigned char log_level = INFO;
 extern ProtobufCService databaseService;
 
+int PAGE_SIZE = 4096;
+
 int main(int argc, char **argv) {
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
     // read from arguments
@@ -34,7 +36,7 @@ int main(int argc, char **argv) {
 
     remove(filepath);
 
-    server_init_document(filepath, 512);
+    server_init_document(filepath, PAGE_SIZE);
 
     signal(SIGPIPE, SIG_IGN);
 

@@ -43,7 +43,6 @@ Result page_get_item(Page *self, item_index_t item_id, Item *item) {
         return ERROR("Item id is out of range");
     }
 
-
     ItemMetadata *metadata = get_metadata(self, item_id);
     assert(metadata->is_deleted == false);
     assert(self->page_header.next_item_id.item_id > item_id.item_id);

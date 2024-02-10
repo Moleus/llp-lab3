@@ -62,8 +62,8 @@ operation: path { printf("Query operation\n"); }
          | function_call { printf("Function call\n"); }
          ;
 
-path: identifier { add_node(q, $1); printf("Path1: %s\n", $1); }
-    | path SLASH identifier { add_node(q, $3); printf("Path2: %s\n", $3); }
+path: identifier { add_node(q, $1); }
+    | path SLASH identifier { add_node(q, $3); }
     ;
 
 identifier: WORD_T

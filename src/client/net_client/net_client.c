@@ -118,6 +118,23 @@ void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters) {
     while (!closure.is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
 }
+/*
+
+void client_delete_node(ClientService *self, DeleteNodeRequest *request) {
+    protobuf_c_boolean is_done = 0;
+    Rpc__DeleteNodeRequest *query = convert_to_rpc_DeleteNodeRequest(*request);
+    rpc__database__delete_node(self->service, query, handle_delete_nodes_response, &is_done);
+    while (!is_done)
+        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
+}
+*/
+
+void client_delete_node_by_filter(ClientService *self, Rpc__FilterChain *filters) {
+    protobuf_c_boolean is_done = 0;
+    rpc__database__delete_nodes_by_filter(self->service, filters, handle_delete_nodes_response, &is_done);
+    while (!is_done)
+        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
+}
 
 void client_delete_all_nodes(ClientService *self) {
     protobuf_c_boolean is_done = 0;

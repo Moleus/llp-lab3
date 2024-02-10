@@ -66,4 +66,4 @@ NodeConditionFunc node_condition_all(void);
 
 Result document_count_children(Document *self, node_id_t parent_id, int *children_result);
 
-Result delete_node_with_all_descendants(Document *self, Node *node, int *deleted_count);
+Result delete_node_with_all_descendants(Document *self, node_id_t node_id, int *deleted_count);

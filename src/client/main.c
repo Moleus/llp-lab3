@@ -34,8 +34,6 @@ int main(int argc, char **argv) {
     ClientService *service = client_service_new(address);
 
     // setup
-//    client_delete_all_nodes(service);
-//    fill_with_data(service);
 
 //    char *command_template = "create(ssl[@name=subssl][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
 //    char *get_cmd = "ssl[*]\n";
@@ -49,6 +47,15 @@ int main(int argc, char **argv) {
         // Read from input
         fgets(command, sizeof(command), stdin);
 
+        if (strcmp(command, "exit\n") == 0) {
+            break;
+        }
+
+        if (strcmp(command, "init\n") == 0) {
+            client_delete_all_nodes(service);
+            fill_with_data(service);
+            continue;
+        }
         // Parse and process command
         Query *query = parser_parse_command(command);
         make_request_based_on_query(query, service);

@@ -78,7 +78,7 @@ void handle_delete_node_request(const Rpc__DeleteNodeRequest *request, Rpc__Node
     *response = *convert_to_rpc_Node(*result);
 }
 
-void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *response) {
+void get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *response) {
     ASSERT_ARG_NOT_NULL(request)
     ASSERT_ARG_NOT_NULL(response)
 
@@ -110,20 +110,33 @@ void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__No
     *response = convert_to_rpc_Nodes(result);
 }
 
-void handle_delete_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__DeletedNodes *response) {
-    // ignore request filter chain
-    ASSERT_ARG_NOT_NULL(response)
+void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *response) {
+    get_nodes_by_filter_request(request, response);
+}
 
-    int deleted_count = 0;
-    NodeMatcher *all_matcher = node_matcher_new(node_condition_all());
-    Result res = document_delete_nodes_by_condition(g_document, all_matcher, &deleted_count);
-    node_matcher_destroy(all_matcher);
-    if (res.status != RES_OK) {
-        LOG_WARN("[handler] failed to delete nodes by filter: %s", res.message);
+void handle_delete_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__DeletedNodes *response) {
+    Rpc__Nodes nodes = RPC__NODES__INIT;
+
+    get_nodes_by_filter_request(request, &nodes);
+    if (nodes.n_nodes == 0) {
+        Rpc__DeletedNodes tmp_result = RPC__DELETED_NODES__INIT;
+        *response = tmp_result;
+        return;
     }
-    LOG_INFO("[handler] deleted nodes count: %d", deleted_count);
+
+    for (int i = 0; i < nodes.n_nodes; i++) {
+        Rpc__Node *node = nodes.nodes[i];
+        node_id_t delete_node_id = convert_from_rpc_nodeId(node->id);
+        int tmp_count;
+        Result res = delete_node_with_all_descendants(g_document, delete_node_id, &tmp_count);
+        if (res.status != RES_OK) {
+            LOG_ERR("failed to delete node: %s", res.message);
+            exit(1);
+        }
+    }
+    LOG_INFO("[handler] deleted nodes count: %d", nodes.n_nodes);
     Rpc__DeletedNodes tmp_result = RPC__DELETED_NODES__INIT;
-    tmp_result.count = deleted_count;
+    tmp_result.count = nodes.n_nodes;
     *response = tmp_result;
 }
 

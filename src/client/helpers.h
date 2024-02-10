@@ -12,4 +12,6 @@ void make_request_based_on_query(Query *q, ClientService *client);
 
 void add_nodes_sequence(Query *q, ClientService *client);
 
+void delete_node_sequence(Query *q, ClientService *client);
+
 void get_nodes(Query *q, ClientService *client);
