@@ -46,7 +46,7 @@ def get_file_info(path):
     print(len(all_files_info))
     print(f"Total ids: {ids}")
 
-    with open('files_info.txt', 'w') as f:
+    with open('init.txt', 'w') as f:
         for file_id, file_info in all_files_info.items():
             f.write(' '.join(map(str, file_info)) + '\n')
 

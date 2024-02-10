@@ -171,3 +171,14 @@ Rpc__Nodes converters_copy_nodes(Rpc__Nodes nodes) {
     }
     return result;
 }
+
+Rpc__Node converters_copy_node(Rpc__Node node) {
+    Rpc__Node result = RPC__NODE__INIT;
+    result.id = my_alloc(sizeof(Rpc__NodeId));
+    *result.id = *node.id;
+    result.parent_id = my_alloc(sizeof(Rpc__NodeId));
+    *result.parent_id = *node.parent_id;
+    result.value = my_alloc(sizeof(Rpc__NodeValue));
+    *result.value = *node.value;
+    return result;
+}

@@ -24,8 +24,8 @@ NodeConditionFunc fs_new_attribute_condition(char *attribute, char *value) {
 
 // converts FilterChain to NodeMatcherArray
 // creates matcher based on selector field of each filter. It's either identifier (file name) or argument value
+//
 NodeMatcherArray *fs_new_node_matcher_array(const Rpc__FilterChain *filter_chain) {
-    // TODO: полседний фильтр - получение всех детей
     NodeConditionFunc conditions[filter_chain->n_filters];
     for (int i = 0; i < filter_chain->n_filters; i++) {
         Rpc__Filter *filter = filter_chain->filters[i];

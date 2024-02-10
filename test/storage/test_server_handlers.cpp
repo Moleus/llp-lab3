@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
 #include "common.h"
+#include "common.h"
 
 extern "C" {
 #include "private/storage/page_manager.h"
-#include "public/util/common.h"
 #include "private/document_db/document.h"
 #include "public/util/memory.h"
 #include "public/document_db/node_conditions.h"
@@ -12,53 +12,6 @@ extern "C" {
 
 #define PAGE_SIZE 4096
 #define SIGNATURE 0x12345678
-
-#define FILE_PATH "/tmp/test.llp"
-
-NodesArray* setup_nodes(Document *doc) {
-    CreateNodeRequest root_req = (CreateNodeRequest) {
-            .parent = NULL_NODE_ID,
-            .value = node_value_string_new("/")
-    };
-
-    Node root =  {0};
-    Result res = document_add_node(doc, &root_req, &root);
-    ABORT_IF_FAIL(res, "Failed to add root node");
-
-    char *nodes[] = {
-            "ssl root 1705324315 inode/directory",
-            "hosts root 1705324315 text/plain",
-            "passwd root 1705324315 text/plain"
-    };
-
-    char *ssl_children[] = {
-            "cert.pem root 1705324315 text/plain",
-            "private root 1705324315 inode/directory"
-    };
-
-    int nodes_count = sizeof(nodes) / sizeof(nodes[0]);
-    int ssl_children_count = sizeof(ssl_children) / sizeof(ssl_children[0]);
-    NodesArray *arr = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * (nodes_count + ssl_children_count));
-    for (int i = 0; i < nodes_count; i++) {
-        CreateNodeRequest req = (CreateNodeRequest) {
-                .parent = root.id,
-                .value = node_value_string_new(nodes[i])
-        };
-        res = document_add_node(doc, &req, &(arr->nodes[i]));
-        ABORT_IF_FAIL(res, "Failed to add child node");
-    }
-
-    for (int i = nodes_count; i < nodes_count + ssl_children_count; i++) {
-        CreateNodeRequest req = (CreateNodeRequest) {
-                .parent = arr->nodes[0].id,
-                .value = node_value_string_new(ssl_children[i - nodes_count])
-        };
-        res = document_add_node(doc, &req, &(arr->nodes[i]));
-        ABORT_IF_FAIL(res, "Failed to add child node");
-    }
-
-    return arr;
-}
 
 TEST(server_handlers, get_nodes_by_filter_request) {
     char *tmpfilename = tmpnam(NULL);

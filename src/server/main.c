@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
 
     remove(filepath);
 
-    server_init_document(filepath, PAGE_SIZE);
+    Document *doc = server_init_document(filepath, PAGE_SIZE);
 
     signal(SIGPIPE, SIG_IGN);
 

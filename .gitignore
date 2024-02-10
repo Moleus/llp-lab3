@@ -3,4 +3,4 @@
 !.github
 cmake-build-debug
 cmake-build-release
-files_info.txt
+init.txt

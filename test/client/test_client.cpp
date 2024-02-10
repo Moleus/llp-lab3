@@ -21,10 +21,10 @@ TEST(client, convertNodesToFilterChain) {
     n1.next = &n2;
     n2.next = &n3;
 
-    char *names[] = {"/", "etc", "local", "hosts"};
+    char *names[] = {"etc", "local", "hosts"};
 
     Rpc__FilterChain *chain = convertNodesToFilterChain(&n1);
-    ASSERT_EQ(chain->n_filters, 4);
+    ASSERT_EQ(chain->n_filters, 3);
     for (int i = 0; i < chain->n_filters; i++) {
         ASSERT_EQ(chain->filters[i]->type, RPC__FILTER__TYPE__EQUAL);
         ASSERT_EQ(chain->filters[i]->field_name_case, RPC__FILTER__FIELD_NAME_NAME);
@@ -41,10 +41,9 @@ TEST(client, simple_command) {
     Rpc__FilterChain *chain = convertNodesToFilterChain(query->nodes);
 
     ASSERT_EQ(query->func, NOP);
-    ASSERT_EQ(chain->n_filters, 3);
-    ASSERT_STREQ(chain->filters[0]->string_argument, "/");
-    ASSERT_STREQ(chain->filters[1]->string_argument, "ssl");
-    ASSERT_EQ(chain->filters[2]->type, RPC__FILTER__TYPE__ALL);
+    ASSERT_EQ(chain->n_filters, 2);
+    ASSERT_STREQ(chain->filters[0]->string_argument, "ssl");
+    ASSERT_EQ(chain->filters[1]->type, RPC__FILTER__TYPE__ALL);
 }
 
 TEST(client, parse_multiple_filters) {

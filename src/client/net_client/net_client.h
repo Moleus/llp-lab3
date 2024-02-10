@@ -3,6 +3,7 @@
 #include "converters.h"
 
 extern Rpc__Nodes g_get_nodes_response;
+extern Rpc__Node g_add_node_response;
 
 typedef struct {
     protobuf_c_boolean is_done;

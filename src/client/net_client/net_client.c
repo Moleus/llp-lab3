@@ -11,6 +11,7 @@
 
 
 Rpc__Nodes g_get_nodes_response = {0};
+Rpc__Node g_add_node_response = {0};
 
 static void die(const char *msg) {
     fprintf(stderr, "%s\n", msg);
@@ -59,6 +60,7 @@ static void handle_create_response(const Rpc__Node *response, void *closure_data
     if (response == NULL) {
         LOG_WARN("Error processing request.\n", "");
     } else {
+        g_add_node_response = converters_copy_node(*response);
         node_id_t node_id = convert_from_rpc_nodeId(response->id);
         LOG_INFO("Assigned node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
         if (node_id.item_id != -1) {

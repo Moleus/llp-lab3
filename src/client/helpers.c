@@ -4,49 +4,119 @@
 #include "helpers.h"
 #include "public/util/log.h"
 #include "public/util/helpers.h"
+#include "../database/include/public/document_db/node.h"
 
-char *files[] = {
-        "ssl root 1705324315 inode.directory",
-        "timezone root 1705324315 text.plain",
-        "hosts root 1705324315 text.plain",
-        "passwd root 1705324315 text.plain",
-        "group root 1705324315 text.plain",
-        "fstab root 1705324315 text.plain",
-        "shadow root 1705324315 text.plain",
-        "gshadow root 1705324315 text.plain",
-};
+/*
+ * {id} {parent_id} {name} {owner} {access_time} {mime_type}
+ * file contents:
+0 -1 root krot 2024-01-14-20:49:10 inode.directory
+1 0 database krot 2024-01-16-13:40:03 inode.directory
+2 1 src krot 2024-01-16-13:40:03 inode.directory
+3 2 storage krot 2024-01-16-13:40:03 inode.directory
+4 3 file.c krot 2024-01-16-13:40:03 text.plain
+ */
 
-// each element has information about parent and file system information
-Requests generate_requests() {
-    // hardcoded sample data
-    // root
-    int size = 8 + 2;
-    CreateNodeRequest root = {.parent = {.page_id = -1, .item_id = -1}, .value = node_value_string_new("/ root 1705324315 inode/directory")};
-    CreateNodeRequest subroot = {.parent = {.page_id = 0, .item_id = 0}, .value = node_value_string_new("root root 1705324315 inode/directory")};
+#define BUF_SIZE 65536
 
-    CreateNodeRequest *requests = my_alloc(sizeof(CreateNodeRequest) * size);
-    requests[0] = root;
-    requests[1] = subroot;
+typedef struct {
+    int id;
+    int parent_id;
+    char *file_info_content;
+} ParsedEntry;
 
-    for (int i = 0; i < size - 2; i++) {
-        CreateNodeRequest request = {.parent = {.page_id = 0, .item_id = 1}, .value = node_value_string_new(files[i])};
-        requests[i+2] = request;
+int count_lines(FILE* file)
+{
+    char buf[BUF_SIZE];
+    int counter = 0;
+    for(;;)
+    {
+        size_t res = fread(buf, 1, BUF_SIZE, file);
+        if (ferror(file))
+            return -1;
+
+        int i;
+        for(i = 0; i < res; i++)
+            if (buf[i] == '\n')
+                counter++;
+
+        if (feof(file))
+            break;
     }
 
-    return (Requests) {
-        .count = size,
-        .create = requests
-    };
+    return counter;
 }
 
+ParsedFile read_and_split_by_newline_nodes(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        LOG_ERR("File %s doesn't exist", filename);
+        exit(1);
+    }
 
+    int count = count_lines(file);
+
+    fseek(file, 0, SEEK_END);
+    long fsize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    char *string = my_alloc(fsize + 1);
+    fread(string, fsize, 1, file);
+    fclose(file);
+    string[fsize] = 0;
+
+    char **lines = my_alloc(sizeof(char *) * count);
+
+    char *line = strtok(string, "\n");
+    int i = 0;
+    while (line != NULL) {
+        lines[i] = line;
+        line = strtok(NULL, "\n");
+        i++;
+    }
+    return (ParsedFile) {lines, count};
+}
+
+void fill_db_from_lines(ClientService *client, char **lines, int count) {
+    int nodes_count = count;
+    ParsedEntry *all_entries = my_alloc(sizeof(Node) * nodes_count);
+    Rpc__Node* added_nodes = my_alloc(sizeof(Rpc__Node) * nodes_count);
+
+    for (int i = 0; i < nodes_count; i++) {
+        char *line = lines[i];
+        ParsedEntry entry = {0};
+        entry.id = atoi(strtok(line, " "));
+        entry.parent_id = atoi(strtok(NULL, " "));
+        entry.file_info_content = strdup(strtok(NULL, ""));
+        all_entries[i] = entry;
+    }
+
+    // add root
+    assert(all_entries[0].parent_id == -1);
+    assert(all_entries[0].id == 0);
+    CreateNodeRequest request = {
+        .parent = NULL_NODE_ID,
+        .value = node_value_string_new(all_entries[0].file_info_content)
+    };
+    client_add_node(client, &request);
+    added_nodes[0] = g_add_node_response;
+
+    for (int i = 1; i < nodes_count; i++) {
+        int parent_entry_id = all_entries[i].parent_id;
+        node_id_t parent_id = convert_from_rpc_nodeId(added_nodes[parent_entry_id].id);
+        CreateNodeRequest request = {
+            .parent = parent_id,
+            .value = node_value_string_new(all_entries[i].file_info_content)
+        };
+        client_add_node(client, &request);
+        added_nodes[i] = g_add_node_response;
+    }
+}
 
 // takes last node from path
 Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
     ASSERT_ARG_NOT_NULL(nodes);
 
     ParsedNode *cur_node = nodes;
-    int node_names_count = 1; // minimum one node
+    int node_names_count = 0;
     node_names_count++; // plus root node
     while (cur_node->next != NULL) {
         node_names_count++;
@@ -54,10 +124,12 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
     }
 
     ParsedNode *last_node = cur_node;
+    cur_node = nodes;
 
-    cur_node = my_alloc(sizeof(ParsedNode));
-    cur_node->name = "/";
-    cur_node->next = nodes;
+    // TODO: increment node_names_count if uncomment:
+//    cur_node = my_alloc(sizeof(ParsedNode));
+//    cur_node->name = "root";
+//    cur_node->next = nodes;
 
     Rpc__FilterChain *filter_chain = my_alloc(sizeof(Rpc__FilterChain));
     Rpc__FilterChain tmp_chain = RPC__FILTER_CHAIN__INIT;

@@ -26,3 +26,47 @@ void assert_node(Node *node, int page_id, int item_id, int parent_page_id, int p
     }
 }
 
+NodesArray* setup_nodes(Document *doc) {
+    CreateNodeRequest root_req = (CreateNodeRequest) {
+            .parent = NULL_NODE_ID,
+            .value = node_value_string_new("/")
+    };
+
+    Node root =  {0};
+    Result res = document_add_node(doc, &root_req, &root);
+    ABORT_IF_FAIL(res, "Failed to add root node");
+
+    char *nodes[] = {
+            "ssl root 1705324315 inode/directory",
+            "hosts root 1705324315 text/plain",
+            "passwd root 1705324315 text/plain"
+    };
+
+    char *ssl_children[] = {
+            "cert.pem root 1705324315 text/plain",
+            "private root 1705324315 inode/directory"
+    };
+
+    int nodes_count = sizeof(nodes) / sizeof(nodes[0]);
+    int ssl_children_count = sizeof(ssl_children) / sizeof(ssl_children[0]);
+    NodesArray *arr = (NodesArray *) my_alloc(sizeof(NodesArray) + sizeof(Node) * (nodes_count + ssl_children_count));
+    for (int i = 0; i < nodes_count; i++) {
+        CreateNodeRequest req = (CreateNodeRequest) {
+                .parent = root.id,
+                .value = node_value_string_new(nodes[i])
+        };
+        res = document_add_node(doc, &req, &(arr->nodes[i]));
+        ABORT_IF_FAIL(res, "Failed to add child node");
+    }
+
+    for (int i = nodes_count; i < nodes_count + ssl_children_count; i++) {
+        CreateNodeRequest req = (CreateNodeRequest) {
+                .parent = arr->nodes[0].id,
+                .value = node_value_string_new(ssl_children[i - nodes_count])
+        };
+        res = document_add_node(doc, &req, &(arr->nodes[i]));
+        ABORT_IF_FAIL(res, "Failed to add child node");
+    }
+
+    return arr;
+}

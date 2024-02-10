@@ -58,7 +58,7 @@ query:
     | operation EOL
     ;
 
-operation: path { printf("Query operation\n"); }
+operation: path { printf("Your query parsed...\n"); }
          | function_call { printf("Function call\n"); }
          ;
 

@@ -50,3 +50,5 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value);
 
 Rpc__Nodes converters_copy_nodes(Rpc__Nodes nodes);
+
+Rpc__Node converters_copy_node(Rpc__Node node);

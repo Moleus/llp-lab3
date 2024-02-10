@@ -14,3 +14,5 @@ extern "C" {
 void remove_file();
 
 void assert_node(Node *node, int page_id, int item_id, int parent_page_id, int parent_item_id, NodeValue value);
+
+NodesArray* setup_nodes(Document *doc);

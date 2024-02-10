@@ -8,12 +8,9 @@
 unsigned char log_level = DEBUG;
 
 
-void fill_with_data(ClientService *client) {
-    Requests r = generate_requests();
-
-    for (int i = 0; i < r.count; ++i) {
-        client_add_node(client, &r.create[i]);
-    }
+void fill_with_data(ClientService *client, const char *init_file) {
+    ParsedFile f = read_and_split_by_newline_nodes(init_file);
+    fill_db_from_lines(client, f.lines, f.count);
 }
 
 // read from input using parser
@@ -25,6 +22,7 @@ int main(int argc, char **argv) {
     }
 
     const char *address = argv[1];
+    const char *init_file = "/tmp/init.txt";
 
     if (address == NULL) {
         fprintf(stderr, "Usage: %s <address>\n", argv[0]);
@@ -32,8 +30,6 @@ int main(int argc, char **argv) {
     }
 
     ClientService *service = client_service_new(address);
-
-    // setup
 
 //    char *command_template = "create(ssl[@name=subssl][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
 //    char *get_cmd = "ssl[*]\n";
@@ -53,7 +49,7 @@ int main(int argc, char **argv) {
 
         if (strcmp(command, "init\n") == 0) {
             client_delete_all_nodes(service);
-            fill_with_data(service);
+            fill_with_data(service, init_file);
             continue;
         }
         // Parse and process command
