@@ -75,17 +75,17 @@ static void handle_create_response(const Rpc__Node *response, void *closure_data
 }
 
 static void handle_get_response(const Rpc__Nodes *response, void *closure_data) {
-    printf("handle_get_response\n");
+    printf("Handling server response...\n");
     if (response == NULL) {
         printf("Error processing request.\n");
     } else {
-        printf("Nodes count: %zu\n", response->n_nodes);
+        printf("    Nodes satisfy your request: %zu\n", response->n_nodes);
         for (size_t i = 0; i < response->n_nodes; i++) {
             Rpc__Node *node = response->nodes[i];
             node_id_t node_id = convert_from_rpc_nodeId(node->id);
-            printf("Node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
+            printf("    Node id: (%d/%d)\n", node_id.page_id, node_id.item_id);
             Rpc__NodeValue *nodeValue = node->value;
-            printf("Data: %s\n", nodeValue->string_value);
+            printf("    Data: %s\n", nodeValue->string_value);
         }
     }
     g_get_nodes_response = converters_copy_nodes(*response);
@@ -107,7 +107,6 @@ void client_add_node(ClientService *self, CreateNodeRequest *request) {
     protobuf_c_boolean is_done = 0;
     Rpc__CreateNodeRequest *query = convert_to_rpc_CreateNodeRequest(*request);
 
-    printf("client_add_node\n");
     rpc__database__create_node(self->service, query, handle_create_response, &is_done);
     while (!is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
@@ -115,7 +114,6 @@ void client_add_node(ClientService *self, CreateNodeRequest *request) {
 
 void client_get_node_by_filter(ClientService *self, Rpc__FilterChain *filters) {
     Closure closure = {0};
-    printf("client_get_node_by_filter\n");
     rpc__database__get_nodes_by_filter(self->service, filters, handle_get_response, &closure);
     while (!closure.is_done)
         protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());

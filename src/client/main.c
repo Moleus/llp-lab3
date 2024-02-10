@@ -19,26 +19,42 @@ void fill_with_data(ClientService *client) {
 // read from input using parser
 // then call net_client functions based on the query
 int main(int argc, char **argv) {
-    char *address = "127.0.0.1:9097";
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <address>\n", argv[0]);
+        exit(1);
+    }
+
+    const char *address = argv[1];
+
+    if (address == NULL) {
+        fprintf(stderr, "Usage: %s <address>\n", argv[0]);
+        exit(1);
+    }
 
     ClientService *service = client_service_new(address);
 
     // setup
-    client_delete_all_nodes(service);
-    fill_with_data(service);
+//    client_delete_all_nodes(service);
+//    fill_with_data(service);
 
-    char *command_template = "create(ssl[@name=a%d][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
-    char *get_cmd = "ssl[*]\n";
-    Query *get_cmd_q = parser_parse_command(get_cmd);
-    char *command = malloc(100);
-    for (int i = 0; i < 100; ++i) {
-        run_main_loop(service);
+//    char *command_template = "create(ssl[@name=subssl][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
+//    char *get_cmd = "ssl[*]\n";
+//    Query *get_cmd_q = parser_parse_command(get_cmd);
 
-        sprintf(command, command_template, i);
+    char command[100]; // Changed to an array from malloc
+    while(1) {
+        printf("Enter your query: ");
+        fflush(stdout); // Ensure prompt is displayed before input
+
+        // Read from input
+        fgets(command, sizeof(command), stdin);
+
+        // Parse and process command
         Query *query = parser_parse_command(command);
         make_request_based_on_query(query, service);
-        get_nodes(get_cmd_q, service);
+//        get_nodes(get_cmd_q, service);
 
-        sleep(5);
+        // Sleep to control loop speed
+//        sleep(5);
     }
 }

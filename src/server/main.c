@@ -15,8 +15,22 @@ extern ProtobufCService databaseService;
 
 int main(int argc, char **argv) {
     ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
-    const char* filepath = "/tmp/llp-heap-file";
-    const char *listen_port = "9097";
+    // read from arguments
+//    const char* filepath = "/tmp/llp-heap-file";
+//    const char *listen_port = "9097";
+
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <filepath> <port>\n", argv[0]);
+        exit(1);
+    }
+
+    const char* filepath = argv[1];
+    const char *listen_port = argv[2];
+
+    if (listen_port == NULL || filepath == NULL) {
+        fprintf(stderr, "Usage: %s <filepath> <port>\n", argv[0]);
+        exit(1);
+    }
 
     remove(filepath);
 
