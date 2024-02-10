@@ -1,8 +1,6 @@
-#include <protobuf-c-rpc/protobuf-c-rpc.h>
 #include <malloc.h>
 #include "common.pb-c.h"
 #include "converters.h"
-#include <signal.h>
 #include "public/util/common.h"
 #include "public/document_db/document.h"
 #include "public/structures.h"

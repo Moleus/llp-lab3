@@ -57,15 +57,15 @@ TEST(server, fs_matcher_array_with_field) {
     Rpc__Filter root_filter = RPC__FILTER__INIT;
     root_filter.type = RPC__FILTER__TYPE__EQUAL;
     root_filter.argument_case = RPC__FILTER__ARGUMENT_STRING_ARGUMENT;
-    root_filter.string_argument = "root";
+    root_filter.string_argument = "file-name";
     root_filter.name = "name";
     root_filter.field_name_case = RPC__FILTER__FIELD_NAME_NAME;
 
     Rpc__Filter filter = RPC__FILTER__INIT;
     filter.type = RPC__FILTER__TYPE__EQUAL;
     filter.argument_case = RPC__FILTER__ARGUMENT_STRING_ARGUMENT;
-    filter.string_argument = "passwd";
-    filter.name = "name";
+    filter.string_argument = "a";
+    filter.name = "owner";
     filter.field_name_case = RPC__FILTER__FIELD_NAME_NAME;
 
     Rpc__FilterChain chain = RPC__FILTER_CHAIN__INIT;
@@ -76,6 +76,6 @@ TEST(server, fs_matcher_array_with_field) {
 
     NodeMatcherArray *result = fs_new_node_matcher_array(&chain);
 
-    ASSERT_TRUE(node_condition_matches(result->matchers[0], (Node) {.value = node_value_string_new("root")}));
-    ASSERT_TRUE(node_condition_matches(result->matchers[1], (Node) {.value = node_value_string_new("passwd")}));
+    ASSERT_TRUE(node_condition_matches(result->matchers[0], (Node) {.value = node_value_string_new("file-name root 1705324315 inode.directory")}));
+    ASSERT_TRUE(node_condition_matches(result->matchers[1], (Node) {.value = node_value_string_new("x a 1705324315 inode.directory")}));
 }

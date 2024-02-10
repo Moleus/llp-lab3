@@ -96,11 +96,11 @@ static void handle_get_response(const Rpc__Nodes *response, void *closure_data) 
 }
 
 static void handle_delete_nodes_response(const Rpc__DeletedNodes *response, void *closure_data) {
-    printf("handle_delete_nodes_response\n");
+    LOG_DEBUG("handle_delete_nodes_response\n", "");
     if (response == NULL) {
         printf("Error processing request.\n");
     } else {
-        printf("Deleted nodes: %d\n", response->count);
+        printf("Successfully deleted nodes: %d\n", response->count);
     }
     *(protobuf_c_boolean *) closure_data = 1;
 }

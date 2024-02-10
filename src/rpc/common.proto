@@ -43,6 +43,7 @@ message Filter {
     EQUAL = 3;
     NOT_EQUAL = 4;
     ALL = 5;
+    FIELD_NAME = 6;
   }
   Type type = 1;
   oneof argument {

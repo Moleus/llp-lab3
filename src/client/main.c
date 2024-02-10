@@ -5,8 +5,7 @@
 #include "parser/my_parser.h"
 #include "helpers.h"
 
-unsigned char log_level = DEBUG;
-
+unsigned char log_level = WARN;
 
 void fill_with_data(ClientService *client, const char *init_file) {
     ParsedFile f = read_and_split_by_newline_nodes(init_file);
@@ -35,7 +34,7 @@ int main(int argc, char **argv) {
 //    char *get_cmd = "ssl[*]\n";
 //    Query *get_cmd_q = parser_parse_command(get_cmd);
 
-    char command[100]; // Changed to an array from malloc
+    char command[256]; // Changed to an array from malloc
     while(1) {
         printf("Enter your query: ");
         fflush(stdout); // Ensure prompt is displayed before input
@@ -52,6 +51,7 @@ int main(int argc, char **argv) {
             fill_with_data(service, init_file);
             continue;
         }
+        LOG_INFO("Command: '%s'", command);
         // Parse and process command
         Query *query = parser_parse_command(command);
         make_request_based_on_query(query, service);

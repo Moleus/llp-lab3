@@ -59,7 +59,7 @@ query:
     ;
 
 operation: path { printf("Your query parsed...\n"); }
-         | function_call { printf("Function call\n"); }
+         | function_call
          ;
 
 path: identifier { add_node(q, $1); }

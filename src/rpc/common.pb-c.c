@@ -769,7 +769,7 @@ const ProtobufCMessageDescriptor rpc__node_value__descriptor =
   (ProtobufCMessageInit) rpc__node_value__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCEnumValue rpc__filter__type__enum_values_by_number[6] =
+static const ProtobufCEnumValue rpc__filter__type__enum_values_by_number[7] =
 {
   { "UNKNOWN_TYPE", "RPC__FILTER__TYPE__UNKNOWN_TYPE", 0 },
   { "GREATER", "RPC__FILTER__TYPE__GREATER", 1 },
@@ -777,14 +777,16 @@ static const ProtobufCEnumValue rpc__filter__type__enum_values_by_number[6] =
   { "EQUAL", "RPC__FILTER__TYPE__EQUAL", 3 },
   { "NOT_EQUAL", "RPC__FILTER__TYPE__NOT_EQUAL", 4 },
   { "ALL", "RPC__FILTER__TYPE__ALL", 5 },
+  { "FIELD_NAME", "RPC__FILTER__TYPE__FIELD_NAME", 6 },
 };
 static const ProtobufCIntRange rpc__filter__type__value_ranges[] = {
-{0, 0},{0, 6}
+{0, 0},{0, 7}
 };
-static const ProtobufCEnumValueIndex rpc__filter__type__enum_values_by_name[6] =
+static const ProtobufCEnumValueIndex rpc__filter__type__enum_values_by_name[7] =
 {
   { "ALL", 5 },
   { "EQUAL", 3 },
+  { "FIELD_NAME", 6 },
   { "GREATER", 1 },
   { "LESS", 2 },
   { "NOT_EQUAL", 4 },
@@ -797,9 +799,9 @@ const ProtobufCEnumDescriptor rpc__filter__type__descriptor =
   "Type",
   "Rpc__Filter__Type",
   "Rpc",
-  6,
+  7,
   rpc__filter__type__enum_values_by_number,
-  6,
+  7,
   rpc__filter__type__enum_values_by_name,
   1,
   rpc__filter__type__value_ranges,

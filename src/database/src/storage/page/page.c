@@ -44,6 +44,7 @@ Result page_get_item(Page *self, item_index_t item_id, Item *item) {
     }
 
     ItemMetadata *metadata = get_metadata(self, item_id);
+    // TODO: assertion fails when deleting directory with items
     assert(metadata->is_deleted == false);
     assert(self->page_header.next_item_id.item_id > item_id.item_id);
 

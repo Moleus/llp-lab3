@@ -28,7 +28,6 @@ def get_file_info(path):
         nonlocal files_info
         nonlocal ids
 
-        dir_id = ids
         for entry in os.scandir(folder_path):
             entry_path = os.path.join(folder_path, entry.name)
 
@@ -37,7 +36,7 @@ def get_file_info(path):
             files_info[ids] = [ids, parent_id] + list(entry_info)
             ids += 1
             if entry.is_dir():
-                process_folder(entry_path, parent_id=dir_id)
+                process_folder(entry_path, parent_id=ids-1)
 
         return files_info
 

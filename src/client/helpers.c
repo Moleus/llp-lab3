@@ -111,8 +111,7 @@ void fill_db_from_lines(ClientService *client, char **lines, int count) {
     }
 }
 
-// takes last node from path
-Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
+Rpc__FilterChain* convertNodesToFilterChainPathOnly(ParsedNode* nodes) {
     ASSERT_ARG_NOT_NULL(nodes);
 
     ParsedNode *cur_node = nodes;
@@ -123,13 +122,7 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
         cur_node = cur_node->next;
     }
 
-    ParsedNode *last_node = cur_node;
     cur_node = nodes;
-
-    // TODO: increment node_names_count if uncomment:
-//    cur_node = my_alloc(sizeof(ParsedNode));
-//    cur_node->name = "root";
-//    cur_node->next = nodes;
 
     Rpc__FilterChain *filter_chain = my_alloc(sizeof(Rpc__FilterChain));
     Rpc__FilterChain tmp_chain = RPC__FILTER_CHAIN__INIT;
@@ -153,14 +146,66 @@ Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
         i++;
         cur_node = cur_node->next;
     }
+    return filter_chain;
+}
 
-    if (last_node->filters != NULL && last_node->filters->filter->operation == ALL_OP) {
+// takes last node from path
+Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
+    ASSERT_ARG_NOT_NULL(nodes);
+
+    ParsedNode *first_node = nodes;
+    ParsedNode *cur_node = nodes;
+    int node_names_count = 0;
+    node_names_count++; // plus root node
+    while (cur_node->next != NULL) {
+        node_names_count++;
+        cur_node = cur_node->next;
+    }
+
+    cur_node = nodes;
+
+    Rpc__FilterChain *filter_chain = my_alloc(sizeof(Rpc__FilterChain));
+    Rpc__FilterChain tmp_chain = RPC__FILTER_CHAIN__INIT;
+    *filter_chain = tmp_chain;
+    filter_chain->n_filters = node_names_count;
+    filter_chain->filters = my_alloc(sizeof(Rpc__Filter*) * node_names_count);
+
+    int i = 0;
+    while (cur_node != NULL) {
         Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
         Rpc__Filter tmp = RPC__FILTER__INIT;
         *filter = tmp;
-        filter->type = RPC__FILTER__TYPE__ALL;
+        filter->type = RPC__FILTER__TYPE__EQUAL;
+        filter->argument_case = RPC__FILTER__ARGUMENT_STRING_ARGUMENT;
+        filter->string_argument = cur_node->name;
+        filter->name = "name";
+        filter->field_name_case = RPC__FILTER__FIELD_NAME_NAME;
         filter_chain->filters[i] = filter;
-        filter_chain->n_filters++;
+        i++;
+        cur_node = cur_node->next;
+    }
+
+    // additional filters
+    if (first_node->filters != NULL) {
+        if (first_node->filters->filter->operation == ALL_OP) {
+            Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
+            Rpc__Filter tmp = RPC__FILTER__INIT;
+            *filter = tmp;
+            filter->type = RPC__FILTER__TYPE__ALL;
+            filter_chain->filters[i] = filter;
+            filter_chain->n_filters++;
+        } else {
+            Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
+            Rpc__Filter tmp = RPC__FILTER__INIT;
+            *filter = tmp;
+            filter->type = RPC__FILTER__TYPE__FIELD_NAME;
+            filter->name = strdup(first_node->filters->filter->left.name);
+            filter->string_argument = strdup(first_node->filters->filter->right->string);
+            filter->field_name_case = RPC__FILTER__FIELD_NAME_NAME;
+            filter->argument_case = RPC__FILTER__ARGUMENT_STRING_ARGUMENT;
+            filter_chain->filters[i] = filter;
+            filter_chain->n_filters++;
+        }
     }
 
     return filter_chain;
@@ -210,7 +255,7 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     // get node from server. Store it's id. Set id as a parent for CreateNodeRequest
     // if node doesn't exist then fail
 
-    Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
+    Rpc__FilterChain *chain = convertNodesToFilterChainPathOnly(q->nodes);
     // TODO: get returned node
     client_get_node_by_filter(client, chain);
     Rpc__Nodes nodes = g_get_nodes_response;
@@ -221,7 +266,7 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     node_id_t parent_id = convert_from_rpc_nodeId(nodes.nodes[0]->id);
 
     char *buffer = my_alloc(256);
-    Filter *last_node_filters = parsed_node_get_last(pNode)->filters;
+    Filter *last_node_filters = pNode->filters;
     convert_query_args_to_string(last_node_filters, buffer);
 
     LOG_INFO("New node values: %s", buffer);

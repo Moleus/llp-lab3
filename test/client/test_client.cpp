@@ -46,6 +46,22 @@ TEST(client, simple_command) {
     ASSERT_EQ(chain->filters[1]->type, RPC__FILTER__TYPE__ALL);
 }
 
+TEST(client, convert_fields) {
+    char *command = "ssl/sub[@owner=krot]\n";
+    Query *query = parser_parse_command(command);
+
+    Rpc__FilterChain *chain = convertNodesToFilterChain(query->nodes);
+
+    ASSERT_EQ(query->func, NOP);
+    ASSERT_EQ(chain->n_filters, 3);
+    ASSERT_STREQ(chain->filters[0]->string_argument, "ssl");
+    ASSERT_STREQ(chain->filters[0]->name, "name");
+    ASSERT_STREQ(chain->filters[1]->string_argument, "sub");
+    ASSERT_STREQ(chain->filters[1]->name, "name");
+    ASSERT_STREQ(chain->filters[2]->string_argument, "krot");
+    ASSERT_STREQ(chain->filters[2]->name, "owner");
+}
+
 TEST(client, parse_multiple_filters) {
     char *command = "create(ssl[@name=a1][@owner=root][@access_time=1705324315][@mime_type=text.plain])\n";
 
@@ -63,6 +79,34 @@ TEST(client, parse_multiple_filters) {
     f = f->next;
     ASSERT_STREQ(f->filter->left.name, "access_time");
     ASSERT_STREQ(f->filter->right->string, "1705324315");
+    f = f->next;
+    ASSERT_STREQ(f->filter->left.name, "mime_type");
+    ASSERT_STREQ(f->filter->right->string, "text.plain");
+
+    ASSERT_EQ(f->next, nullptr);
+}
+
+TEST(client, create_nested) {
+//                   create(root/client[@name=new-file.txt][@owner=other][@access_time=2024-02-01-20:22:00][@mime_type=text.plain])
+    char *command = "create(root/client[@name=new-file.txt][@owner=other][@access_time=2024-02-01-20:22:00][@mime_type=text.plain]) \n";
+
+    Query *query = parser_parse_command(command);
+    Filter *f = query->nodes->filters;
+
+    ASSERT_EQ(query->func, CREATE_OP);
+    ASSERT_STREQ(query->nodes->name, "root");
+
+    ASSERT_TRUE(query->nodes->next != NULL);
+    ASSERT_STREQ(query->nodes->next->name, "client");
+
+    ASSERT_STREQ(f->filter->left.name, "name");
+    ASSERT_STREQ(f->filter->right->string, "new-file.txt");
+    f = f->next;
+    ASSERT_STREQ(f->filter->left.name, "owner");
+    ASSERT_STREQ(f->filter->right->string, "other");
+    f = f->next;
+    ASSERT_STREQ(f->filter->left.name, "access_time");
+    ASSERT_STREQ(f->filter->right->string, "2024-02-01-20:22:00");
     f = f->next;
     ASSERT_STREQ(f->filter->left.name, "mime_type");
     ASSERT_STREQ(f->filter->right->string, "text.plain");

@@ -29,7 +29,7 @@ void assert_node(Node *node, int page_id, int item_id, int parent_page_id, int p
 NodesArray* setup_nodes(Document *doc) {
     CreateNodeRequest root_req = (CreateNodeRequest) {
             .parent = NULL_NODE_ID,
-            .value = node_value_string_new("/")
+            .value = node_value_string_new("base root 1705324315 inode/directory")
     };
 
     Node root =  {0};

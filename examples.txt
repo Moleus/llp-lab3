@@ -1,4 +1,6 @@
-create(root/ssl[@name=subssl][@owner=root][@access_time=1705324315][@mime_type=text.plain])
-create(ssl[@name=subssl][@owner=root][@access_time=1705324315][@mime_type=text/plain])
-// get all children
-create(ssl[*])
+root[*]
+root/client[*]
+root/client[@mime_type=inode.directory]
+create(root/client[@name=new-file.txt][@owner=other][@access_time=2024-02-01-20:22:00][@mime_type=text.plain])
+delete(root/client/new-file.txt)
+delete(root/client[@mime_type=text.plain])

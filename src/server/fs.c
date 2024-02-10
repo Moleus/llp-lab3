@@ -35,6 +35,8 @@ NodeMatcherArray *fs_new_node_matcher_array(const Rpc__FilterChain *filter_chain
             if (filter->field_name_case == RPC__FILTER__FIELD_NAME__NOT_SET) {
                 ABORT_EXIT(SERVER_ERROR, "Filter field name not set")
             }
+            assert(filter->name);
+            assert(filter->string_argument);
             conditions[i] = fs_new_attribute_condition(filter->name, filter->string_argument);
         }
     }
