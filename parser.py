@@ -12,6 +12,8 @@ def get_entry_info(entry_path):
     mimetype, _ = mimetypes.guess_type(entry_path)
     mimetype = (mimetype or 'inode/directory').replace('/', '.')
     name = os.path.basename(entry_path)
+    if name == '':
+        name = "root"
     return name, owner, access_time, mimetype
 
 def get_file_info(path):
@@ -29,7 +31,6 @@ def get_file_info(path):
         dir_id = ids
         for entry in os.scandir(folder_path):
             entry_path = os.path.join(folder_path, entry.name)
-            print(f"Processing {entry_path}")
 
             entry_info = get_entry_info(entry_path)
 
