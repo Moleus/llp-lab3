@@ -28,15 +28,18 @@ def get_file_info(path):
         nonlocal files_info
         nonlocal ids
 
-        for entry in os.scandir(folder_path):
-            entry_path = os.path.join(folder_path, entry.name)
+        try:
+            for entry in os.scandir(folder_path):
+                entry_path = os.path.join(folder_path, entry.name)
 
-            entry_info = get_entry_info(entry_path)
+                entry_info = get_entry_info(entry_path)
 
-            files_info[ids] = [ids, parent_id] + list(entry_info)
-            ids += 1
-            if entry.is_dir():
-                process_folder(entry_path, parent_id=ids-1)
+                files_info[ids] = [ids, parent_id] + list(entry_info)
+                ids += 1
+                if entry.is_dir():
+                    process_folder(entry_path, parent_id=ids-1)
+        except PermissionError:
+            print(f"Permission denied for {folder_path}")
 
         return files_info
 
