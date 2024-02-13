@@ -20,27 +20,33 @@ typedef struct Rpc__NodeId Rpc__NodeId;
 typedef struct Rpc__NodeValue Rpc__NodeValue;
 typedef struct Rpc__Filter Rpc__Filter;
 typedef struct Rpc__FilterChain Rpc__FilterChain;
+typedef struct Rpc__Nodes Rpc__Nodes;
 typedef struct Rpc__Node Rpc__Node;
 typedef struct Rpc__CreateNodeRequest Rpc__CreateNodeRequest;
 typedef struct Rpc__UpdateNodeRequest Rpc__UpdateNodeRequest;
 typedef struct Rpc__DeleteNodeRequest Rpc__DeleteNodeRequest;
+typedef struct Rpc__DeletedNodes Rpc__DeletedNodes;
 
 
 /* --- enums --- */
 
 typedef enum _Rpc__NodeValue__Type {
-  RPC__NODE_VALUE__TYPE__INT_32 = 0,
-  RPC__NODE_VALUE__TYPE__DOUBLE = 1,
-  RPC__NODE_VALUE__TYPE__STRING = 2,
-  RPC__NODE_VALUE__TYPE__BOOL = 3,
-  RPC__NODE_VALUE__TYPE__FILE_INFO = 4
+  RPC__NODE_VALUE__TYPE__UNKNOWN = 0,
+  RPC__NODE_VALUE__TYPE__INT_32 = 1,
+  RPC__NODE_VALUE__TYPE__DOUBLE = 2,
+  RPC__NODE_VALUE__TYPE__STRING = 3,
+  RPC__NODE_VALUE__TYPE__BOOL = 4,
+  RPC__NODE_VALUE__TYPE__FILE_INFO = 5
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__NODE_VALUE__TYPE)
 } Rpc__NodeValue__Type;
 typedef enum _Rpc__Filter__Type {
-  RPC__FILTER__TYPE__GREATER = 0,
-  RPC__FILTER__TYPE__LESS = 1,
-  RPC__FILTER__TYPE__EQUAL = 2,
-  RPC__FILTER__TYPE__NOT_EQUAL = 3
+  RPC__FILTER__TYPE__UNKNOWN_TYPE = 0,
+  RPC__FILTER__TYPE__GREATER = 1,
+  RPC__FILTER__TYPE__LESS = 2,
+  RPC__FILTER__TYPE__EQUAL = 3,
+  RPC__FILTER__TYPE__NOT_EQUAL = 4,
+  RPC__FILTER__TYPE__ALL = 5,
+  RPC__FILTER__TYPE__FIELD_NAME = 6
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__FILTER__TYPE)
 } Rpc__Filter__Type;
 
@@ -95,7 +101,7 @@ struct  Rpc__NodeValue
 };
 #define RPC__NODE_VALUE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__node_value__descriptor) \
-, RPC__NODE_VALUE__TYPE__INT_32, RPC__NODE_VALUE__VALUE__NOT_SET, {0} }
+, RPC__NODE_VALUE__TYPE__UNKNOWN, RPC__NODE_VALUE__VALUE__NOT_SET, {0} }
 
 
 typedef enum {
@@ -107,9 +113,12 @@ typedef enum {
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__FILTER__ARGUMENT__CASE)
 } Rpc__Filter__ArgumentCase;
 
-/*
- * Файл будет всегда фильтроваться по имени.
- */
+typedef enum {
+  RPC__FILTER__FIELD_NAME__NOT_SET = 0,
+  RPC__FILTER__FIELD_NAME_NAME = 6
+    PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__FILTER__FIELD_NAME__CASE)
+} Rpc__Filter__FieldNameCase;
+
 struct  Rpc__Filter
 {
   ProtobufCMessage base;
@@ -121,10 +130,14 @@ struct  Rpc__Filter
     char *string_argument;
     protobuf_c_boolean bool_argument;
   };
+  Rpc__Filter__FieldNameCase field_name_case;
+  union {
+    char *name;
+  };
 };
 #define RPC__FILTER__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__filter__descriptor) \
-, RPC__FILTER__TYPE__GREATER, RPC__FILTER__ARGUMENT__NOT_SET, {0} }
+, RPC__FILTER__TYPE__UNKNOWN_TYPE, RPC__FILTER__ARGUMENT__NOT_SET, {0}, RPC__FILTER__FIELD_NAME__NOT_SET, {0} }
 
 
 struct  Rpc__FilterChain
@@ -135,6 +148,17 @@ struct  Rpc__FilterChain
 };
 #define RPC__FILTER_CHAIN__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__filter_chain__descriptor) \
+, 0,NULL }
+
+
+struct  Rpc__Nodes
+{
+  ProtobufCMessage base;
+  size_t n_nodes;
+  Rpc__Node **nodes;
+};
+#define RPC__NODES__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__nodes__descriptor) \
 , 0,NULL }
 
 
@@ -181,6 +205,16 @@ struct  Rpc__DeleteNodeRequest
 #define RPC__DELETE_NODE_REQUEST__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&rpc__delete_node_request__descriptor) \
 , NULL }
+
+
+struct  Rpc__DeletedNodes
+{
+  ProtobufCMessage base;
+  int32_t count;
+};
+#define RPC__DELETED_NODES__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&rpc__deleted_nodes__descriptor) \
+, 0 }
 
 
 /* Rpc__FileInfo methods */
@@ -278,6 +312,25 @@ Rpc__FilterChain *
 void   rpc__filter_chain__free_unpacked
                      (Rpc__FilterChain *message,
                       ProtobufCAllocator *allocator);
+/* Rpc__Nodes methods */
+void   rpc__nodes__init
+                     (Rpc__Nodes         *message);
+size_t rpc__nodes__get_packed_size
+                     (const Rpc__Nodes   *message);
+size_t rpc__nodes__pack
+                     (const Rpc__Nodes   *message,
+                      uint8_t             *out);
+size_t rpc__nodes__pack_to_buffer
+                     (const Rpc__Nodes   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__Nodes *
+       rpc__nodes__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__nodes__free_unpacked
+                     (Rpc__Nodes *message,
+                      ProtobufCAllocator *allocator);
 /* Rpc__Node methods */
 void   rpc__node__init
                      (Rpc__Node         *message);
@@ -354,6 +407,25 @@ Rpc__DeleteNodeRequest *
 void   rpc__delete_node_request__free_unpacked
                      (Rpc__DeleteNodeRequest *message,
                       ProtobufCAllocator *allocator);
+/* Rpc__DeletedNodes methods */
+void   rpc__deleted_nodes__init
+                     (Rpc__DeletedNodes         *message);
+size_t rpc__deleted_nodes__get_packed_size
+                     (const Rpc__DeletedNodes   *message);
+size_t rpc__deleted_nodes__pack
+                     (const Rpc__DeletedNodes   *message,
+                      uint8_t             *out);
+size_t rpc__deleted_nodes__pack_to_buffer
+                     (const Rpc__DeletedNodes   *message,
+                      ProtobufCBuffer     *buffer);
+Rpc__DeletedNodes *
+       rpc__deleted_nodes__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   rpc__deleted_nodes__free_unpacked
+                     (Rpc__DeletedNodes *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Rpc__FileInfo_Closure)
@@ -371,6 +443,9 @@ typedef void (*Rpc__Filter_Closure)
 typedef void (*Rpc__FilterChain_Closure)
                  (const Rpc__FilterChain *message,
                   void *closure_data);
+typedef void (*Rpc__Nodes_Closure)
+                 (const Rpc__Nodes *message,
+                  void *closure_data);
 typedef void (*Rpc__Node_Closure)
                  (const Rpc__Node *message,
                   void *closure_data);
@@ -382,6 +457,9 @@ typedef void (*Rpc__UpdateNodeRequest_Closure)
                   void *closure_data);
 typedef void (*Rpc__DeleteNodeRequest_Closure)
                  (const Rpc__DeleteNodeRequest *message,
+                  void *closure_data);
+typedef void (*Rpc__DeletedNodes_Closure)
+                 (const Rpc__DeletedNodes *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -406,10 +484,14 @@ struct Rpc__Database_Service
                    const Rpc__NodeId *input,
                    Rpc__Node_Closure closure,
                    void *closure_data);
-  void (*get_node_by_filter)(Rpc__Database_Service *service,
-                             const Rpc__FilterChain *input,
-                             Rpc__Node_Closure closure,
-                             void *closure_data);
+  void (*get_nodes_by_filter)(Rpc__Database_Service *service,
+                              const Rpc__FilterChain *input,
+                              Rpc__Nodes_Closure closure,
+                              void *closure_data);
+  void (*delete_nodes_by_filter)(Rpc__Database_Service *service,
+                                 const Rpc__FilterChain *input,
+                                 Rpc__DeletedNodes_Closure closure,
+                                 void *closure_data);
 };
 typedef void (*Rpc__Database_ServiceDestroy)(Rpc__Database_Service *);
 void rpc__database__init (Rpc__Database_Service *service,
@@ -422,7 +504,8 @@ void rpc__database__init (Rpc__Database_Service *service,
       function_prefix__ ## update_node,\
       function_prefix__ ## delete_node,\
       function_prefix__ ## get_node,\
-      function_prefix__ ## get_node_by_filter  }
+      function_prefix__ ## get_nodes_by_filter,\
+      function_prefix__ ## delete_nodes_by_filter  }
 void rpc__database__create_node(ProtobufCService *service,
                                 const Rpc__CreateNodeRequest *input,
                                 Rpc__Node_Closure closure,
@@ -439,10 +522,14 @@ void rpc__database__get_node(ProtobufCService *service,
                              const Rpc__NodeId *input,
                              Rpc__Node_Closure closure,
                              void *closure_data);
-void rpc__database__get_node_by_filter(ProtobufCService *service,
-                                       const Rpc__FilterChain *input,
-                                       Rpc__Node_Closure closure,
-                                       void *closure_data);
+void rpc__database__get_nodes_by_filter(ProtobufCService *service,
+                                        const Rpc__FilterChain *input,
+                                        Rpc__Nodes_Closure closure,
+                                        void *closure_data);
+void rpc__database__delete_nodes_by_filter(ProtobufCService *service,
+                                           const Rpc__FilterChain *input,
+                                           Rpc__DeletedNodes_Closure closure,
+                                           void *closure_data);
 
 /* --- descriptors --- */
 
@@ -453,10 +540,12 @@ extern const ProtobufCEnumDescriptor    rpc__node_value__type__descriptor;
 extern const ProtobufCMessageDescriptor rpc__filter__descriptor;
 extern const ProtobufCEnumDescriptor    rpc__filter__type__descriptor;
 extern const ProtobufCMessageDescriptor rpc__filter_chain__descriptor;
+extern const ProtobufCMessageDescriptor rpc__nodes__descriptor;
 extern const ProtobufCMessageDescriptor rpc__node__descriptor;
 extern const ProtobufCMessageDescriptor rpc__create_node_request__descriptor;
 extern const ProtobufCMessageDescriptor rpc__update_node_request__descriptor;
 extern const ProtobufCMessageDescriptor rpc__delete_node_request__descriptor;
+extern const ProtobufCMessageDescriptor rpc__deleted_nodes__descriptor;
 extern const ProtobufCServiceDescriptor rpc__database__descriptor;
 
 PROTOBUF_C__END_DECLS

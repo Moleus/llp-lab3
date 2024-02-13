@@ -52,7 +52,7 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
     ItemAddResult tmp_add_result;
     Page *current_page = page;
 
-    LOG_INFO("Put item to page %d. Payload size: %d", page->page_header.page_id.id, payload.size);
+    LOG_DEBUG("Put item to page %d. Payload size: %d", page->page_header.page_id.id, payload.size);
 
     // if we don't have enough space in page then we need to allocate new page and place left data there
     while (bytes_written < payload.size) {
@@ -61,12 +61,13 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
         page_index_t continue_on_page = NULL_PAGE_INDEX;
         Page *free_page = NULL;
         int32_t payload_size = (int32_t) payload.size - (int32_t) bytes_written;
-        if (page_can_fit_any_payload(current_page) == false) {
+        if (page_can_fit_any_payload(current_page) == false || page_can_fit_payload(current_page, payload_size) == false) {
             // can't place even part of a payload
             Result res = page_manager_get_new_free_page(self, &free_page);
             current_page = free_page;
             ABORT_IF_FAIL(res, "Failed to allocate one more page for payload that can't suite page")
         } else if (page_can_fit_payload(current_page, payload_size) == false) {
+            ABORT_EXIT(INTERNAL_LIB_ERROR, "Page splitting is disabled. Can't place large payload on page");
             // early allocate next page
             Result res = page_manager_get_new_free_page(self, &free_page);
             ABORT_IF_FAIL(res, "Failed to allocate one more page for large payload")
@@ -81,10 +82,11 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
                                                    &tmp_add_result);
         ABORT_IF_FAIL(res, "Failed to add item to page in memory")
 
-        if (page == current_page) {
-            // first page. Save result
-            *item_add_result = tmp_add_result;
-        }
+//        if (page != current_page) {
+//            ABORT_EXIT(INTERNAL_LIB_ERROR, "We use one page per item");
+//        }
+        // first page. Save result
+        *item_add_result = tmp_add_result;
         assert(tmp_add_result.write_status.bytes_written == payload_to_write.size);
         bytes_written += tmp_add_result.write_status.bytes_written;
         current_page = free_page;

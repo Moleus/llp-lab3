@@ -10,7 +10,7 @@ Page *page_new(page_index_t page_id, uint32_t page_size) {
     Page *result = calloc(1, page_size);
     ASSERT_NOT_NULL(result, FAILED_TO_ALLOCATE_MEMORY)
 
-    LOG_DEBUG("Allocated page with id %d, size: %d", page_id.id, page_size);
+    LOG_DEBUG("[page_new] Allocated page with id %d, size: %d", page_id.id, page_size);
 
     PageHeader header = {
             .page_id = page_id,
@@ -43,8 +43,8 @@ Result page_get_item(Page *self, item_index_t item_id, Item *item) {
         return ERROR("Item id is out of range");
     }
 
-
     ItemMetadata *metadata = get_metadata(self, item_id);
+    // TODO: assertion fails when deleting directory with items
     assert(metadata->is_deleted == false);
     assert(self->page_header.next_item_id.item_id > item_id.item_id);
 
@@ -52,7 +52,8 @@ Result page_get_item(Page *self, item_index_t item_id, Item *item) {
             (ItemPayload) {.size = metadata->size, .data = get_item_data_addr(self, metadata->data_offset)},
             item_id);
 
-    LOG_DEBUG("Created item with id %d (or %d), size: %d, offset: %d", item_id.item_id, item->id.item_id, item->payload.size, metadata->data_offset);
+    assert(item_id.item_id == item->id.item_id);
+    LOG_DEBUG("Created item with id %d, size: %d, offset: %d", item_id.item_id, item->payload.size, metadata->data_offset);
     return OK;
 }
 

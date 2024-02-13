@@ -8,6 +8,7 @@ enum ErrorCodes {
     NOT_NULL_POINTER_IN_ARGS = 1,
     FAILED_TO_ALLOCATE_MEMORY = 2,
     INTERNAL_LIB_ERROR = 3,
+    SERVER_ERROR = 4,
 };
 
 // enum items descriptions map

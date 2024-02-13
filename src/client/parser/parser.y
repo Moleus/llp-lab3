@@ -58,12 +58,12 @@ query:
     | operation EOL
     ;
 
-operation: path { printf("Query operation\n"); }
-         | function_call { printf("Function call\n"); }
+operation: path { printf("Your query parsed...\n"); }
+         | function_call
          ;
 
-path: identifier { add_node(q, $1); printf("Path1: %s\n", $1); }
-    | path SLASH identifier { add_node(q, $3); printf("Path2: %s\n", $3); }
+path: identifier { add_node(q, $1); }
+    | path SLASH identifier { add_node(q, $3); }
     ;
 
 identifier: WORD_T
@@ -102,6 +102,9 @@ filter_expr
     }
     | attribute compare_op node_value {
         $$ = create_filter($1, $2, $3);
+    }
+    | ASTERISK {
+        $$ = create_filter_all();
     }
     ;
 

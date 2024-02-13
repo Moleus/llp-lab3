@@ -22,6 +22,7 @@ typedef enum {
     NOT_EQUALS_OP,
     LESS_THAN_OP,
     GREATER_THAN_OP,
+    ALL_OP
 } LogicalOperation;
 
 typedef enum {
@@ -96,11 +97,13 @@ Element *create_double(double value);
 
 Element *create_string(char *value);
 
-Filter *create_filter(char *attribute, int operator, Element *value);
+Filter *create_filter(char *attribute, int op, Element *value);
 
 Filter *create_filter_single_value(Element *value);
 
 Filter* create_filter_by_var_name(char *var_name);
+
+Filter* create_filter_all();
 
 FunctionType get_function_type(char *func);
 

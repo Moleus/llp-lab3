@@ -24,13 +24,8 @@ typedef struct {
 } CreateMultipleNodesResult;
 
 typedef struct {
-    Node *node;
+    node_id_t parent;
 } GetAllChildrenRequest;
-
-typedef struct {
-    size_t count;
-    Node nodes[];
-} GetAllChildrenResult;
 
 Document *document_new(void);
 
@@ -46,12 +41,29 @@ Result document_delete_node(Document *self, DeleteNodeRequest *request, Node *re
 
 Result document_update_node(Document *self, UpdateNodeRequest *request, Node *result);
 
-Result document_get_all_children(Document *self, GetAllChildrenRequest *request, GetAllChildrenResult *result);
+Result document_get_all_children(Document *self, GetAllChildrenRequest *request, NodesArray *result);
 
-Result document_get_node_by_condition(Document *self, NodeMatcher *matcher, Node *result);
-
-Result document_get_node_by_condition_sequence(Document *self, NodeMatcherArray *matchers, Node *result);
+Result document_get_all_nodes(Document *self, NodesArray *result);
 
 double document_get_insertion_time_ms(void);
 
 double document_get_deletion_time_ms(void);
+
+Result document_delete_all_nodes(Document *self, int *deleted_count);
+
+Result document_delete_nodes_by_condition(Document *self, NodeMatcher *matcher, int *deleted_count);
+
+Result document_count_nodes_by_condition_sequence(Document *self, NodeMatcherArray *matchers, int *count_result);
+
+Result document_count_nodes_by_condition(Document *self, NodeMatcher *matcher, int *count);
+
+Result document_get_nodes_by_condition(Document *self, NodeMatcher *matcher, NodesArray *result);
+
+Result document_get_nodes_by_condition_sequence(Document *self, NodeMatcherArray *matchers, NodesArray *result);
+
+Result document_take_first_node_by_condition(Document *self, NodeMatcher *matcher, Node *result);
+NodeConditionFunc node_condition_all(void);
+
+Result document_count_children(Document *self, node_id_t parent_id, int *children_result);
+
+Result delete_node_with_all_descendants(Document *self, node_id_t node_id, int *deleted_count);

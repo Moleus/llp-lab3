@@ -33,6 +33,6 @@ static bool result_is_fail__(Result result) {
 
 #define ABORT_IF_FAIL(result, return_error_msg)  \
     if (result_is_fail__(result)) {              \
-        LOG_ERR("%s", (result).message);         \
+        LOG_ERR("%s: %s", return_error_msg, (result).message);         \
         exit(1);                                 \
     }

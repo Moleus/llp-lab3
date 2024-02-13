@@ -14,6 +14,7 @@
 "//" { return SLASHSLASH; }
 "/" { return SLASH; }
 "@" { return AT; }
+"*" { return ASTERISK; }
 
 "="  {yylval.int_value = 0; return EQUALS_T;}
 "!=" {yylval.int_value = 1; return NOT_EQUALS_T;}
@@ -27,10 +28,11 @@
 
 \n { return EOL; }
 
-[a-zA-Z0-9_.]* { yylval.string = strdup(yytext); return WORD_T; }
+[a-zA-Z0-9_.:-]* { yylval.string = strdup(yytext); return WORD_T; }
 ([+-]?[0-9])+           {yylval.int_value = atoi(yytext); return INT_T;}
 [+-]?([0-9]*[.])?[0-9]+ {yylval.double_value = atof(yytext); return DOUBLE_T;}
 
+[ \t] { }
 . { printf("Unrecognized character: %s\n", yytext); exit(1); }
 
 %%

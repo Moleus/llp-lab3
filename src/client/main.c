@@ -3,100 +3,66 @@
 #include "public/util/log.h"
 #include "parser/types.h"
 #include "parser/my_parser.h"
-#include "public/structures.h"
-#include "public/util/memory.h"
+#include "helpers.h"
 
-unsigned char log_level = DEBUG;
+unsigned char log_level = WARN;
 
-// Convert Query to CreateNodeRequest/UpdateNodeRequest/DeleteNodeRequest
-//void convert_query_to_request(Query *query) {
-//    void* handler = client_get_node;
-//    switch (query->func) {
-//        case CREATE_OP:
-//            handler = client_add_node;
-//            break;
-//        case UPDATE_OP:
-//            handler = client_update_node;
-//            break;
-//        case DELETE_OP:
-//            handler = client_delete_node;
-//            break;
-//        case NOP:
-//            handler = client_get_node;
-//            break;
-//        default:
-//            LOG_ERR("Unknown function type: %d", query->func);
-//            exit(1);
-//    }
-//    ParsedNode *node = query->nodes;
-//}
-
-Rpc__FilterChain* convertNodesToFilterChain(ParsedNode* nodes) {
-    ParsedNode *cur_node = nodes;
-    int node_names_count = 0;
-    while (cur_node != NULL) {
-        node_names_count++;
-        cur_node = cur_node->next;
-    }
-
-    Rpc__FilterChain *filter_chain = my_alloc(sizeof(Rpc__FilterChain));
-    Rpc__FilterChain tmp_chain = RPC__FILTER_CHAIN__INIT;
-    *filter_chain = tmp_chain;
-    filter_chain->n_filters = node_names_count;
-    filter_chain->filters = my_alloc(sizeof(Rpc__Filter*) * node_names_count);
-
-    cur_node = nodes;
-    int i = 0;
-    while (cur_node != NULL) {
-        Rpc__Filter *filter = my_alloc(sizeof(Rpc__Filter));
-        Rpc__Filter tmp = RPC__FILTER__INIT;
-        *filter = tmp;
-        filter->type = RPC__FILTER__TYPE__EQUAL;
-        filter->argument_case = RPC__FILTER__ARGUMENT_STRING_ARGUMENT;
-        filter->string_argument = cur_node->name;
-        filter_chain->filters[i] = filter;
-        i++;
-        cur_node = cur_node->next;
-    }
-    return filter_chain;
+void fill_with_data(ClientService *client, const char *init_file) {
+    ParsedFile f = read_and_split_by_newline_nodes(init_file);
+    fill_db_from_lines(client, f.lines, f.count);
 }
 
 // read from input using parser
 // then call net_client functions based on the query
 int main(int argc, char **argv) {
-    char *address = "127.0.0.1:9090";
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <address>\n", argv[0]);
+        exit(1);
+    }
 
-    char *command = "test.txt\n";
-    Query *q = parser_parse_command(command);
+    const char *address = argv[1];
+    const char *init_file = "/tmp/init.txt";
 
-    Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
+    if (address == NULL) {
+        fprintf(stderr, "Usage: %s <address>\n", argv[0]);
+        exit(1);
+    }
 
     ClientService *service = client_service_new(address);
 
-    for (;;) {
-//        Query query = parse();
+//    char *command_template = "create(ssl[@name=subssl][@owner=root][@access_time=1705324315][@mime_type=text/plain])\n";
+//    char *get_cmd = "ssl[*]\n";
+//    Query *get_cmd_q = parser_parse_command(get_cmd);
 
-        // hardcoded sample data
-        CreateNodeRequest data = {
-                .parent = {
-                        .page_id = 0,
-                        .item_id = 0
-                },
-                .value = (NodeValue) {
-                        .type = FILE_INFO,
-                        .file_info_value = {
-                                .name = "test.txt",
-                                .owner = "test",
-                                .access_time = 123456789,
-                                .mime_type = "text/plain"
-                        }
-                }
-        };
+    char command[256]; // Changed to an array from malloc
+    while(1) {
+        printf("Enter your query: ");
+        fflush(stdout); // Ensure prompt is displayed before input
 
-        run_main_loop(service);
+        // Read from input
+        fgets(command, sizeof(command), stdin);
 
-        client_add_node(service, &data);
-        client_get_node_by_filter(service, chain);
-        sleep(5);
+        if (strcmp(command, "exit\n") == 0) {
+            break;
+        }
+
+        if (strcmp(command, "init\n") == 0) {
+            client_delete_all_nodes(service);
+            fill_with_data(service, init_file);
+            continue;
+        }
+        if (strcmp(command, "init-example\n") == 0) {
+            client_delete_all_nodes(service);
+            fill_with_example_data(service);
+            continue;
+        }
+        LOG_INFO("Command: '%s'", command);
+        // Parse and process command
+        Query *query = parser_parse_command(command);
+        make_request_based_on_query(query, service);
+//        get_nodes(get_cmd_q, service);
+
+        // Sleep to control loop speed
+//        sleep(5);
     }
 }

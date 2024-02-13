@@ -3,6 +3,7 @@
 #include "common.pb-c.h"
 #include "public/util/common.h"
 #include "public/structures.h"
+#include "public/util/memory.h"
 
 
 node_id_t convert_from_rpc_nodeId(Rpc__NodeId *node_id) {
@@ -58,30 +59,30 @@ Rpc__DeleteNodeRequest *convert_to_rpc_DeleteNodeRequest(DeleteNodeRequest reque
 }
 
 Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
-    Rpc__NodeValue *result = malloc(sizeof(Rpc__NodeValue));
+    Rpc__NodeValue *result = my_alloc(sizeof(Rpc__NodeValue));
     Rpc__NodeValue tmp_result = RPC__NODE_VALUE__INIT;
 
-    tmp_result.type = (Rpc__NodeValue__Type) value.type;
     switch (value.type) {
         case INT_32:
             tmp_result.int_value = value.int_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_INT_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__INT_32;
             break;
         case DOUBLE:
             tmp_result.double_value = value.double_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_DOUBLE_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__DOUBLE;
             break;
         case STRING:
-            tmp_result.string_value = strdup(value.string_value.value);
+            tmp_result.string_value = my_alloc(sizeof(char*) * (value.string_value.length + 1));
+            strcpy(tmp_result.string_value, value.string_value.value);
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_STRING_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__STRING;
             break;
         case BOOL:
             tmp_result.bool_value = value.bool_value;
             tmp_result.value_case = RPC__NODE_VALUE__VALUE_BOOL_VALUE;
-            break;
-        case FILE_INFO:
-            tmp_result.file_info_value = convert_to_rpc_FileInfo(value.file_info_value);
-            tmp_result.value_case = RPC__NODE_VALUE__VALUE_FILE_INFO_VALUE;
+            tmp_result.type = RPC__NODE_VALUE__TYPE__BOOL;
             break;
         default:
             LOG_ERR("Unknown type: %d", value.type);
@@ -92,12 +93,22 @@ Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value) {
 }
 
 Rpc__Node *convert_to_rpc_Node(Node node) {
-    Rpc__Node *result = malloc(sizeof(Rpc__Node));
+    Rpc__Node *result = my_alloc(sizeof(Rpc__Node));
     Rpc__Node tmp_result = RPC__NODE__INIT;
     tmp_result.id = convert_node_id_to_rpc(node.id);
     tmp_result.parent_id = convert_node_id_to_rpc(node.parent_id);
     tmp_result.value = convert_to_rpc_NodeValue(node.value);
     *result = tmp_result;
+    return result;
+}
+
+Rpc__Nodes convert_to_rpc_Nodes(NodesArray *nodes) {
+    Rpc__Nodes result = RPC__NODES__INIT;
+    result.n_nodes = nodes->count;
+    result.nodes = my_alloc(sizeof(Rpc__Node*) * nodes->count);
+    for (int i = 0; i < nodes->count; i++) {
+        result.nodes[i] = convert_to_rpc_Node(nodes->nodes[i]);
+    }
     return result;
 }
 
@@ -125,28 +136,23 @@ DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest requ
 }
 
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
-//    assert((ValueType) value.type == (ValueType) value.value_case);
-
-    NodeValue result = {
-            .type = (ValueType) value.type
-    };
+    NodeValue result = {0};
     switch (value.type) {
-        case INT_32:
+        case RPC__NODE_VALUE__TYPE__INT_32:
             result.int_value = value.int_value;
+            result.type = INT_32;
             break;
-        case DOUBLE:
+        case RPC__NODE_VALUE__TYPE__DOUBLE:
             result.double_value = value.double_value;
+            result.type = DOUBLE;
             break;
-        case STRING:
-            result.string_value = (String) {
-                    .value = value.string_value
-            };
+        case RPC__NODE_VALUE__TYPE__STRING:
+            result = node_value_string_new(value.string_value);
+            result.type = STRING;
             break;
-        case BOOL:
+        case RPC__NODE_VALUE__TYPE__BOOL:
             result.bool_value = value.bool_value;
-            break;
-        case FILE_INFO:
-            result.file_info_value = convert_from_rpc_FileInfo(*value.file_info_value);
+            result.type = BOOL;
             break;
         default:
             LOG_ERR("Unknown type: %d", value.type);
@@ -155,23 +161,24 @@ NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value) {
     return result;
 }
 
-Rpc__FileInfo *convert_to_rpc_FileInfo(FileInfo file_info) {
-    Rpc__FileInfo *rpc_file_info = malloc(sizeof(Rpc__FileInfo));
-    Rpc__FileInfo result = RPC__FILE_INFO__INIT;
-    result.name = file_info.name;
-    result.owner = file_info.owner;
-    result.access_time = file_info.access_time;
-    result.mime_type = file_info.mime_type;
-    *rpc_file_info = result;
-    return rpc_file_info;
+Rpc__Nodes converters_copy_nodes(Rpc__Nodes nodes) {
+    Rpc__Nodes result = RPC__NODES__INIT;
+    result.n_nodes = nodes.n_nodes;
+    result.nodes = my_alloc(sizeof(Rpc__Node*) * nodes.n_nodes);
+    for (int i = 0; i < nodes.n_nodes; i++) {
+        result.nodes[i] = my_alloc(sizeof(Rpc__Node));
+        *result.nodes[i] = *nodes.nodes[i];
+    }
+    return result;
 }
 
-FileInfo convert_from_rpc_FileInfo(Rpc__FileInfo file_info) {
-    FileInfo result = {
-            .name = file_info.name,
-            .owner = file_info.owner,
-            .access_time = file_info.access_time,
-            .mime_type = file_info.mime_type
-    };
+Rpc__Node converters_copy_node(Rpc__Node node) {
+    Rpc__Node result = RPC__NODE__INIT;
+    result.id = my_alloc(sizeof(Rpc__NodeId));
+    *result.id = *node.id;
+    result.parent_id = my_alloc(sizeof(Rpc__NodeId));
+    *result.parent_id = *node.parent_id;
+    result.value = my_alloc(sizeof(Rpc__NodeValue));
+    *result.value = *node.value;
     return result;
 }

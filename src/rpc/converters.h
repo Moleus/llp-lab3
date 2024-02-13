@@ -6,9 +6,14 @@
 #include "public/structures.h"
 
 typedef struct {
-    NodeValue value;
     node_id_t parent;
+    NodeValue value;
 } CreateNodeRequest;
+
+typedef struct {
+    int count;
+    CreateNodeRequest *create;
+} Requests;
 
 typedef struct {
     node_id_t node_id;
@@ -22,8 +27,6 @@ typedef struct {
 
 Rpc__NodeId *convert_node_id_to_rpc(node_id_t node_id);
 
-Rpc__FileInfo *convert_to_rpc_FileInfo(FileInfo file_info);
-
 Rpc__CreateNodeRequest *convert_to_rpc_CreateNodeRequest(CreateNodeRequest request);
 
 Rpc__UpdateNodeRequest *convert_to_rpc_UpdateNodeRequest(UpdateNodeRequest request);
@@ -31,6 +34,8 @@ Rpc__UpdateNodeRequest *convert_to_rpc_UpdateNodeRequest(UpdateNodeRequest reque
 Rpc__DeleteNodeRequest *convert_to_rpc_DeleteNodeRequest(DeleteNodeRequest request);
 
 Rpc__NodeValue *convert_to_rpc_NodeValue(NodeValue value);
+
+Rpc__Nodes convert_to_rpc_Nodes(NodesArray *nodes);
 
 Rpc__Node *convert_to_rpc_Node(Node node);
 
@@ -42,7 +47,8 @@ UpdateNodeRequest convert_from_rpc_UpdateNodeRequest(Rpc__UpdateNodeRequest requ
 
 DeleteNodeRequest convert_from_rpc_DeleteNodeRequest(Rpc__DeleteNodeRequest request);
 
-FileInfo convert_from_rpc_FileInfo(Rpc__FileInfo file_info);
-
 NodeValue convert_from_rpc_NodeValue(Rpc__NodeValue value);
 
+Rpc__Nodes converters_copy_nodes(Rpc__Nodes nodes);
+
+Rpc__Node converters_copy_node(Rpc__Node node);

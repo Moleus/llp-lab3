@@ -1,15 +1,18 @@
-#include <protobuf-c-rpc/protobuf-c-rpc.h>
 #include <malloc.h>
 #include "common.pb-c.h"
 #include "converters.h"
-#include <signal.h>
 #include "public/util/common.h"
 #include "public/document_db/document.h"
 #include "public/structures.h"
 #include "fs.h"
 #include "public/util/memory.h"
+#include "server.h"
 
 static Document *g_document = NULL;
+
+void _set_document(Document *document) {
+    g_document = document;
+}
 
 // Implement server logic here
 void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node *response) {
@@ -20,18 +23,16 @@ void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node
 
     CreateNodeRequest node_request = convert_from_rpc_CreateNodeRequest(*request);
 
-    printf("parent_id: (%d/%d)\n", node_request.parent.page_id, node_request.parent.item_id);
-
     Node *result = my_alloc(sizeof(Node));
 
     CreateNodeRequest create_node_request = {
         .parent = node_request.parent,
         .value = node_request.value
     };
+    LOG_INFO("[handler] create node request: %s", node_request.value.string_value.value);
     Result res = document_add_node(g_document, &create_node_request, result);
     if (res.status != RES_OK) {
-        LOG_ERR("failed to add node: %s", res.message);
-        exit(1);
+        LOG_ERR("[handler] failed to add node: %s", res.message);
     }
     // TODO: pointer or value? is it initialized?
     *response = *convert_to_rpc_Node(*result);
@@ -47,6 +48,7 @@ void handle_update_node_request(const Rpc__UpdateNodeRequest *request, Rpc__Node
 
     Node *result = my_alloc(sizeof(Node));
 
+    LOG_INFO("[handler] update node request. id: (%d/%d)", node_request.node_id.page_id, node_request.node_id.item_id);
     Result res = document_update_node(g_document, &node_request, result);
     if (res.status != RES_OK) {
         LOG_ERR("failed to update node: %s", res.message);
@@ -74,20 +76,66 @@ void handle_delete_node_request(const Rpc__DeleteNodeRequest *request, Rpc__Node
     *response = *convert_to_rpc_Node(*result);
 }
 
-void handle_get_node_by_filter_request(const Rpc__FilterChain *request, Rpc__Node *response) {
+void get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *response) {
     ASSERT_ARG_NOT_NULL(request)
     ASSERT_ARG_NOT_NULL(response)
 
-    Node *result = my_alloc(sizeof(Node));
-
     NodeMatcherArray *matcherArray = fs_new_node_matcher_array(request);
-    Result res = document_get_node_by_condition_sequence(g_document, matcherArray, result);
+
+    int nodes_count = 0;
+    // TODO: returns 0 on /ssl when not restarted
+    Result res = document_count_nodes_by_condition_sequence(g_document, matcherArray, &nodes_count);
     if (res.status != RES_OK) {
-        result->id = NULL_NODE_ID;
-        LOG_WARN("failed to get node by filter: %s", res.message);
+        LOG_ERR("[handler] failed to count nodes by filter: %s", res.message);
+    }
+    LOG_INFO("[handler] nodes satisfying request: %d", nodes_count);
+
+    if (nodes_count == 0) {
+        Rpc__Nodes tmp_result = RPC__NODES__INIT;
+        *response = tmp_result;
+        return;
     }
 
-    *response = *convert_to_rpc_Node(*result);
+    NodesArray *result = nodes_array_new(nodes_count);
+
+    result->count = nodes_count;
+    res = document_get_nodes_by_condition_sequence(g_document, matcherArray, result);
+    if (res.status != RES_OK) {
+        result->count = 0;
+        LOG_ERR("[handler] failed to get node by filter: %s", res.message);
+    }
+
+    *response = convert_to_rpc_Nodes(result);
+}
+
+void handle_get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *response) {
+    get_nodes_by_filter_request(request, response);
+}
+
+void handle_delete_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__DeletedNodes *response) {
+    Rpc__Nodes nodes = RPC__NODES__INIT;
+
+    get_nodes_by_filter_request(request, &nodes);
+    if (nodes.n_nodes == 0) {
+        Rpc__DeletedNodes tmp_result = RPC__DELETED_NODES__INIT;
+        *response = tmp_result;
+        return;
+    }
+
+    for (int i = 0; i < nodes.n_nodes; i++) {
+        Rpc__Node *node = nodes.nodes[i];
+        node_id_t delete_node_id = convert_from_rpc_nodeId(node->id);
+        int tmp_count;
+        Result res = delete_node_with_all_descendants(g_document, delete_node_id, &tmp_count);
+        if (res.status != RES_OK) {
+            LOG_ERR("failed to delete node: %s", res.message);
+            exit(1);
+        }
+    }
+    LOG_INFO("[handler] deleted nodes count: %d", nodes.n_nodes);
+    Rpc__DeletedNodes tmp_result = RPC__DELETED_NODES__INIT;
+    tmp_result.count = nodes.n_nodes;
+    *response = tmp_result;
 }
 
 void prefix__create_node(Rpc__Database_Service *service, const Rpc__CreateNodeRequest *input, Rpc__Node_Closure closure, void *closure_data) {
@@ -118,74 +166,30 @@ void prefix__get_node(Rpc__Database_Service *service, const Rpc__NodeId *input, 
     (void) closure_data;
 }
 
-void prefix__get_node_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Node_Closure closure, void *closure_data) {
+void prefix__get_nodes_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Nodes_Closure closure, void *closure_data) {
     (void) service;
-    LOG_INFO("Received get_node_by_filter request. Filters count: %d", input->n_filters);
-    Rpc__Node response = RPC__NODE__INIT;
-    handle_get_node_by_filter_request(input, &response);
+    Rpc__Nodes response = RPC__NODES__INIT;
+    handle_get_nodes_by_filter_request(input, &response);
     closure(&response, closure_data);
 }
 
-static Rpc__Database_Service databaseService = RPC__DATABASE__INIT(prefix__);
+void prefix__delete_nodes_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__DeletedNodes_Closure closure, void *closure_data) {
+    (void) service;
+    LOG_INFO("[rpc__node_by_filter] Received delete_nodes_by_filter request. Filters count: %d", input->n_filters);
+    Rpc__DeletedNodes response = RPC__DELETED_NODES__INIT;
+    handle_delete_nodes_by_filter_request(input, &response);
+    closure(&response, closure_data);
+}
 
-void init_document(const char* filepath, size_t page_size) {
+Rpc__Database_Service databaseService = RPC__DATABASE__INIT(prefix__);
+
+Document *server_init_document(const char* filepath, size_t page_size) {
     g_document = document_new();
     Result res = document_init(g_document, filepath, page_size);
     if (res.status != RES_OK) {
         LOG_ERR("failed to init document: %s", res.message);
         exit(1);
     }
+    return g_document;
 }
 
-// fs_new_file_path_matchers(char *files[], size_t count)
-void test() {
-    char *files[] = {"file1", "file2", "file3", "file4"};
-    Node node = {
-        .id = {
-            .page_id = 1,
-            .item_id = 2
-        },
-        .value = {
-            .type = FILE_INFO,
-            .file_info_value = {
-                .name = "file4",
-                .owner = "owner1",
-                .access_time = 1,
-                .mime_type = "mime1"
-            }
-        }
-    };
-    size_t count = 4;
-    NodeMatcherArray *array = fs_new_file_path_matchers(files, count);
-    for (int i = 0; i < array->matchers_count; ++i) {
-        bool matches = node_condition_matches(array->matchers[i], node);
-        printf("matcher: %d\n", matches);
-    }
-    node_matcher_array_destroy(array);
-}
-
-int main() {
-//    test();
-//    return 0;
-    ProtobufC_RPC_AddressType address_type = PROTOBUF_C_RPC_ADDRESS_TCP;
-    const char* filepath = "/tmp/llp-heap-file-2";
-    const char *listen_port = "9090";
-
-    init_document(filepath, 512);
-
-    signal(SIGPIPE, SIG_IGN);
-
-    ProtobufCService *service = (ProtobufCService *) &databaseService;
-
-    // TODO: fix address already in use
-    ProtobufC_RPC_Server *pServer = protobuf_c_rpc_server_new(address_type, listen_port, service, NULL);
-    if (pServer == NULL) {
-        fprintf(stderr, "Error creating server!\n");
-        exit(1);
-    }
-
-    // Run the server loop
-    for (;;) {
-        protobuf_c_rpc_dispatch_run(protobuf_c_rpc_dispatch_default());
-    }
-}

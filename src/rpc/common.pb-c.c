@@ -232,6 +232,51 @@ void   rpc__filter_chain__free_unpacked
   assert(message->base.descriptor == &rpc__filter_chain__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   rpc__nodes__init
+                     (Rpc__Nodes         *message)
+{
+  static const Rpc__Nodes init_value = RPC__NODES__INIT;
+  *message = init_value;
+}
+size_t rpc__nodes__get_packed_size
+                     (const Rpc__Nodes *message)
+{
+  assert(message->base.descriptor == &rpc__nodes__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t rpc__nodes__pack
+                     (const Rpc__Nodes *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &rpc__nodes__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t rpc__nodes__pack_to_buffer
+                     (const Rpc__Nodes *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &rpc__nodes__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Rpc__Nodes *
+       rpc__nodes__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Rpc__Nodes *)
+     protobuf_c_message_unpack (&rpc__nodes__descriptor,
+                                allocator, len, data);
+}
+void   rpc__nodes__free_unpacked
+                     (Rpc__Nodes *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &rpc__nodes__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 void   rpc__node__init
                      (Rpc__Node         *message)
 {
@@ -412,6 +457,51 @@ void   rpc__delete_node_request__free_unpacked
   assert(message->base.descriptor == &rpc__delete_node_request__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   rpc__deleted_nodes__init
+                     (Rpc__DeletedNodes         *message)
+{
+  static const Rpc__DeletedNodes init_value = RPC__DELETED_NODES__INIT;
+  *message = init_value;
+}
+size_t rpc__deleted_nodes__get_packed_size
+                     (const Rpc__DeletedNodes *message)
+{
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t rpc__deleted_nodes__pack
+                     (const Rpc__DeletedNodes *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t rpc__deleted_nodes__pack_to_buffer
+                     (const Rpc__DeletedNodes *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Rpc__DeletedNodes *
+       rpc__deleted_nodes__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Rpc__DeletedNodes *)
+     protobuf_c_message_unpack (&rpc__deleted_nodes__descriptor,
+                                allocator, len, data);
+}
+void   rpc__deleted_nodes__free_unpacked
+                     (Rpc__DeletedNodes *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &rpc__deleted_nodes__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 static const ProtobufCFieldDescriptor rpc__file_info__field_descriptors[4] =
 {
   {
@@ -540,24 +630,26 @@ const ProtobufCMessageDescriptor rpc__node_id__descriptor =
   (ProtobufCMessageInit) rpc__node_id__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCEnumValue rpc__node_value__type__enum_values_by_number[5] =
+static const ProtobufCEnumValue rpc__node_value__type__enum_values_by_number[6] =
 {
-  { "INT_32", "RPC__NODE_VALUE__TYPE__INT_32", 0 },
-  { "DOUBLE", "RPC__NODE_VALUE__TYPE__DOUBLE", 1 },
-  { "STRING", "RPC__NODE_VALUE__TYPE__STRING", 2 },
-  { "BOOL", "RPC__NODE_VALUE__TYPE__BOOL", 3 },
-  { "FILE_INFO", "RPC__NODE_VALUE__TYPE__FILE_INFO", 4 },
+  { "UNKNOWN", "RPC__NODE_VALUE__TYPE__UNKNOWN", 0 },
+  { "INT_32", "RPC__NODE_VALUE__TYPE__INT_32", 1 },
+  { "DOUBLE", "RPC__NODE_VALUE__TYPE__DOUBLE", 2 },
+  { "STRING", "RPC__NODE_VALUE__TYPE__STRING", 3 },
+  { "BOOL", "RPC__NODE_VALUE__TYPE__BOOL", 4 },
+  { "FILE_INFO", "RPC__NODE_VALUE__TYPE__FILE_INFO", 5 },
 };
 static const ProtobufCIntRange rpc__node_value__type__value_ranges[] = {
-{0, 0},{0, 5}
+{0, 0},{0, 6}
 };
-static const ProtobufCEnumValueIndex rpc__node_value__type__enum_values_by_name[5] =
+static const ProtobufCEnumValueIndex rpc__node_value__type__enum_values_by_name[6] =
 {
-  { "BOOL", 3 },
-  { "DOUBLE", 1 },
-  { "FILE_INFO", 4 },
-  { "INT_32", 0 },
-  { "STRING", 2 },
+  { "BOOL", 4 },
+  { "DOUBLE", 2 },
+  { "FILE_INFO", 5 },
+  { "INT_32", 1 },
+  { "STRING", 3 },
+  { "UNKNOWN", 0 },
 };
 const ProtobufCEnumDescriptor rpc__node_value__type__descriptor =
 {
@@ -566,9 +658,9 @@ const ProtobufCEnumDescriptor rpc__node_value__type__descriptor =
   "Type",
   "Rpc__NodeValue__Type",
   "Rpc",
-  5,
+  6,
   rpc__node_value__type__enum_values_by_number,
-  5,
+  6,
   rpc__node_value__type__enum_values_by_name,
   1,
   rpc__node_value__type__value_ranges,
@@ -677,22 +769,28 @@ const ProtobufCMessageDescriptor rpc__node_value__descriptor =
   (ProtobufCMessageInit) rpc__node_value__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCEnumValue rpc__filter__type__enum_values_by_number[4] =
+static const ProtobufCEnumValue rpc__filter__type__enum_values_by_number[7] =
 {
-  { "GREATER", "RPC__FILTER__TYPE__GREATER", 0 },
-  { "LESS", "RPC__FILTER__TYPE__LESS", 1 },
-  { "EQUAL", "RPC__FILTER__TYPE__EQUAL", 2 },
-  { "NOT_EQUAL", "RPC__FILTER__TYPE__NOT_EQUAL", 3 },
+  { "UNKNOWN_TYPE", "RPC__FILTER__TYPE__UNKNOWN_TYPE", 0 },
+  { "GREATER", "RPC__FILTER__TYPE__GREATER", 1 },
+  { "LESS", "RPC__FILTER__TYPE__LESS", 2 },
+  { "EQUAL", "RPC__FILTER__TYPE__EQUAL", 3 },
+  { "NOT_EQUAL", "RPC__FILTER__TYPE__NOT_EQUAL", 4 },
+  { "ALL", "RPC__FILTER__TYPE__ALL", 5 },
+  { "FIELD_NAME", "RPC__FILTER__TYPE__FIELD_NAME", 6 },
 };
 static const ProtobufCIntRange rpc__filter__type__value_ranges[] = {
-{0, 0},{0, 4}
+{0, 0},{0, 7}
 };
-static const ProtobufCEnumValueIndex rpc__filter__type__enum_values_by_name[4] =
+static const ProtobufCEnumValueIndex rpc__filter__type__enum_values_by_name[7] =
 {
-  { "EQUAL", 2 },
-  { "GREATER", 0 },
-  { "LESS", 1 },
-  { "NOT_EQUAL", 3 },
+  { "ALL", 5 },
+  { "EQUAL", 3 },
+  { "FIELD_NAME", 6 },
+  { "GREATER", 1 },
+  { "LESS", 2 },
+  { "NOT_EQUAL", 4 },
+  { "UNKNOWN_TYPE", 0 },
 };
 const ProtobufCEnumDescriptor rpc__filter__type__descriptor =
 {
@@ -701,15 +799,15 @@ const ProtobufCEnumDescriptor rpc__filter__type__descriptor =
   "Type",
   "Rpc__Filter__Type",
   "Rpc",
-  4,
+  7,
   rpc__filter__type__enum_values_by_number,
-  4,
+  7,
   rpc__filter__type__enum_values_by_name,
   1,
   rpc__filter__type__value_ranges,
   NULL,NULL,NULL,NULL   /* reserved[1234] */
 };
-static const ProtobufCFieldDescriptor rpc__filter__field_descriptors[5] =
+static const ProtobufCFieldDescriptor rpc__filter__field_descriptors[6] =
 {
   {
     "type",
@@ -771,18 +869,31 @@ static const ProtobufCFieldDescriptor rpc__filter__field_descriptors[5] =
     PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "name",
+    6,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_STRING,
+    offsetof(Rpc__Filter, field_name_case),
+    offsetof(Rpc__Filter, name),
+    NULL,
+    &protobuf_c_empty_string,
+    PROTOBUF_C_FIELD_FLAG_ONEOF,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned rpc__filter__field_indices_by_name[] = {
   4,   /* field[4] = bool_argument */
   2,   /* field[2] = double_argument */
   1,   /* field[1] = int_argument */
+  5,   /* field[5] = name */
   3,   /* field[3] = string_argument */
   0,   /* field[0] = type */
 };
 static const ProtobufCIntRange rpc__filter__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 5 }
+  { 0, 6 }
 };
 const ProtobufCMessageDescriptor rpc__filter__descriptor =
 {
@@ -792,7 +903,7 @@ const ProtobufCMessageDescriptor rpc__filter__descriptor =
   "Rpc__Filter",
   "Rpc",
   sizeof(Rpc__Filter),
-  5,
+  6,
   rpc__filter__field_descriptors,
   rpc__filter__field_indices_by_name,
   1,  rpc__filter__number_ranges,
@@ -835,6 +946,44 @@ const ProtobufCMessageDescriptor rpc__filter_chain__descriptor =
   rpc__filter_chain__field_indices_by_name,
   1,  rpc__filter_chain__number_ranges,
   (ProtobufCMessageInit) rpc__filter_chain__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor rpc__nodes__field_descriptors[1] =
+{
+  {
+    "nodes",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_MESSAGE,
+    offsetof(Rpc__Nodes, n_nodes),
+    offsetof(Rpc__Nodes, nodes),
+    &rpc__node__descriptor,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned rpc__nodes__field_indices_by_name[] = {
+  0,   /* field[0] = nodes */
+};
+static const ProtobufCIntRange rpc__nodes__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor rpc__nodes__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "Rpc.Nodes",
+  "Nodes",
+  "Rpc__Nodes",
+  "Rpc",
+  sizeof(Rpc__Nodes),
+  1,
+  rpc__nodes__field_descriptors,
+  rpc__nodes__field_indices_by_name,
+  1,  rpc__nodes__number_ranges,
+  (ProtobufCMessageInit) rpc__nodes__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
 static const ProtobufCFieldDescriptor rpc__node__field_descriptors[3] =
@@ -1054,19 +1203,59 @@ const ProtobufCMessageDescriptor rpc__delete_node_request__descriptor =
   (ProtobufCMessageInit) rpc__delete_node_request__init,
   NULL,NULL,NULL    /* reserved[123] */
 };
-static const ProtobufCMethodDescriptor rpc__database__method_descriptors[5] =
+static const ProtobufCFieldDescriptor rpc__deleted_nodes__field_descriptors[1] =
+{
+  {
+    "count",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    offsetof(Rpc__DeletedNodes, count),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned rpc__deleted_nodes__field_indices_by_name[] = {
+  0,   /* field[0] = count */
+};
+static const ProtobufCIntRange rpc__deleted_nodes__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor rpc__deleted_nodes__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "Rpc.DeletedNodes",
+  "DeletedNodes",
+  "Rpc__DeletedNodes",
+  "Rpc",
+  sizeof(Rpc__DeletedNodes),
+  1,
+  rpc__deleted_nodes__field_descriptors,
+  rpc__deleted_nodes__field_indices_by_name,
+  1,  rpc__deleted_nodes__number_ranges,
+  (ProtobufCMessageInit) rpc__deleted_nodes__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCMethodDescriptor rpc__database__method_descriptors[6] =
 {
   { "CreateNode", &rpc__create_node_request__descriptor, &rpc__node__descriptor },
   { "UpdateNode", &rpc__update_node_request__descriptor, &rpc__node__descriptor },
   { "DeleteNode", &rpc__delete_node_request__descriptor, &rpc__node__descriptor },
   { "GetNode", &rpc__node_id__descriptor, &rpc__node__descriptor },
-  { "GetNodeByFilter", &rpc__filter_chain__descriptor, &rpc__node__descriptor },
+  { "GetNodesByFilter", &rpc__filter_chain__descriptor, &rpc__nodes__descriptor },
+  { "DeleteNodesByFilter", &rpc__filter_chain__descriptor, &rpc__deleted_nodes__descriptor },
 };
 const unsigned rpc__database__method_indices_by_name[] = {
   0,        /* CreateNode */
   2,        /* DeleteNode */
+  5,        /* DeleteNodesByFilter */
   3,        /* GetNode */
-  4,        /* GetNodeByFilter */
+  4,        /* GetNodesByFilter */
   1         /* UpdateNode */
 };
 const ProtobufCServiceDescriptor rpc__database__descriptor =
@@ -1076,7 +1265,7 @@ const ProtobufCServiceDescriptor rpc__database__descriptor =
   "Database",
   "Rpc__Database",
   "Rpc",
-  5,
+  6,
   rpc__database__method_descriptors,
   rpc__database__method_indices_by_name
 };
@@ -1112,13 +1301,21 @@ void rpc__database__get_node(ProtobufCService *service,
   assert(service->descriptor == &rpc__database__descriptor);
   service->invoke(service, 3, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
-void rpc__database__get_node_by_filter(ProtobufCService *service,
-                                       const Rpc__FilterChain *input,
-                                       Rpc__Node_Closure closure,
-                                       void *closure_data)
+void rpc__database__get_nodes_by_filter(ProtobufCService *service,
+                                        const Rpc__FilterChain *input,
+                                        Rpc__Nodes_Closure closure,
+                                        void *closure_data)
 {
   assert(service->descriptor == &rpc__database__descriptor);
   service->invoke(service, 4, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
+}
+void rpc__database__delete_nodes_by_filter(ProtobufCService *service,
+                                           const Rpc__FilterChain *input,
+                                           Rpc__DeletedNodes_Closure closure,
+                                           void *closure_data)
+{
+  assert(service->descriptor == &rpc__database__descriptor);
+  service->invoke(service, 5, (const ProtobufCMessage *) input, (ProtobufCClosure) closure, closure_data);
 }
 void rpc__database__init (Rpc__Database_Service *service,
                           Rpc__Database_ServiceDestroy destroy)
