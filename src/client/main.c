@@ -51,6 +51,11 @@ int main(int argc, char **argv) {
             fill_with_data(service, init_file);
             continue;
         }
+        if (strcmp(command, "init-example\n") == 0) {
+            client_delete_all_nodes(service);
+            fill_with_example_data(service);
+            continue;
+        }
         LOG_INFO("Command: '%s'", command);
         // Parse and process command
         Query *query = parser_parse_command(command);

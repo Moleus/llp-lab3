@@ -67,6 +67,8 @@ typedef enum {
     FILE_INFO_MIME_TYPE = 8
 } FileInfoAttributes;
 
+bool contains_file_info_attribute(char *attribute);
+
 FileInfoAttributes file_info_attribute_from_string(char* attribute);
 
 bool file_info_attribute_matches(FileInfoAttributes attr, char* value, FileInfo file_info);

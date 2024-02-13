@@ -228,8 +228,16 @@ void make_request_based_on_query(Query *q, ClientService *client) {
 }
 
 void convert_query_args_to_string(Filter *filters, char* buffer) {
+    ASSERT_ARG_NOT_NULL(filters);
+
     Filter *cur_filter = filters;
     FileInfo fileInfo = {0};
+
+    if (filters->next == NULL) {
+        // only one argument. It's not a file info
+        sprintf(buffer, "%s", filters->filter->right->string);
+        return;
+    }
 
     while (cur_filter != NULL) {
         FilterExpr *expr = cur_filter->filter;
@@ -242,21 +250,10 @@ void convert_query_args_to_string(Filter *filters, char* buffer) {
     file_info_to_string(fileInfo, buffer);
 }
 
-ParsedNode * parsed_node_get_last(ParsedNode *node) {
-    ParsedNode *cur_node = node;
-    while (cur_node->next != NULL) {
-        cur_node = cur_node->next;
-    }
-    return cur_node;
-}
-
 void add_nodes_sequence(Query *q, ClientService *client) {
     ParsedNode *pNode = q->nodes;
-    // get node from server. Store it's id. Set id as a parent for CreateNodeRequest
-    // if node doesn't exist then fail
 
     Rpc__FilterChain *chain = convertNodesToFilterChainPathOnly(q->nodes);
-    // TODO: get returned node
     client_get_node_by_filter(client, chain);
     Rpc__Nodes nodes = g_get_nodes_response;
     if (nodes.n_nodes == 0) {
@@ -266,8 +263,9 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     node_id_t parent_id = convert_from_rpc_nodeId(nodes.nodes[0]->id);
 
     char *buffer = my_alloc(256);
-    Filter *last_node_filters = pNode->filters;
-    convert_query_args_to_string(last_node_filters, buffer);
+    Filter *parameter_filters = pNode->filters;
+    // single string like '{name} {owner} ...' or '{value}'
+    convert_query_args_to_string(parameter_filters, buffer);
 
     LOG_INFO("New node values: %s", buffer);
     CreateNodeRequest request = {
@@ -278,24 +276,35 @@ void add_nodes_sequence(Query *q, ClientService *client) {
     client_add_node(client, &request);
 }
 
+void fill_with_example_data(ClientService *client) {
+    char *values[3] = {"a", "b", "c"};
+    char *children[2] = {"d", "e"};
+    node_id_t parent = NULL_NODE_ID;
+    for (int i = 0; i < 3; i++) {
+        if (i > 0) {
+            parent = (node_id_t ) {.page_id = 0, .item_id = 0};
+        }
+        CreateNodeRequest req = {
+            .parent = parent,
+            .value = node_value_string_new(values[i])
+        };
+        client_add_node(client, &req);
+    }
+    for (int i = 0; i < 2; i++) {
+        CreateNodeRequest req = {
+            .parent = (node_id_t ) {.page_id = 0, .item_id = 1},
+            .value = node_value_string_new(children[i])
+        };
+        client_add_node(client, &req);
+    }
+}
+
 void delete_node_sequence(Query *q, ClientService *client) {
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
-//    client_get_node_by_filter(client, chain);
-//    Rpc__Nodes nodes = g_get_nodes_response;
-//    if (nodes.n_nodes == 0) {
-//        LOG_WARN("Node doesn't exist\n", "");
-//        return;
-//    }
-//    node_id_t node_id = convert_from_rpc_nodeId(nodes.nodes[0]->id);
-//    DeleteNodeRequest request = {
-//        .node_id = node_id
-//    };
-//    client_delete_node(client, &request);
     client_delete_node_by_filter(client, chain);
 }
 
 void get_nodes(Query *q, ClientService *client) {
     Rpc__FilterChain *chain = convertNodesToFilterChain(q->nodes);
-    Rpc__Nodes result;
     client_get_node_by_filter(client, chain);
 }

@@ -22,6 +22,14 @@ NodeConditionFunc fs_new_attribute_condition(char *attribute, char *value) {
     });
 }
 
+NodeConditionFunc fs_single_argument_condition(char *value) {
+    return Block_copy(^bool(Node node) {
+        assert(node.value.type == STRING);
+        assert(node.value.string_value.value != NULL);
+        return strcmp(node.value.string_value.value, value) == 0;
+    });
+}
+
 // converts FilterChain to NodeMatcherArray
 // creates matcher based on selector field of each filter. It's either identifier (file name) or argument value
 //
@@ -37,7 +45,11 @@ NodeMatcherArray *fs_new_node_matcher_array(const Rpc__FilterChain *filter_chain
             }
             assert(filter->name);
             assert(filter->string_argument);
-            conditions[i] = fs_new_attribute_condition(filter->name, filter->string_argument);
+            if (contains_file_info_attribute(filter->name)) {
+                conditions[i] = fs_new_attribute_condition(filter->name, filter->string_argument);
+            } else {
+                conditions[i] = fs_single_argument_condition(filter->string_argument);
+            }
         }
     }
 

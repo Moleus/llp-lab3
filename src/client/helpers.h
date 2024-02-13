@@ -22,3 +22,5 @@ void add_nodes_sequence(Query *q, ClientService *client);
 void delete_node_sequence(Query *q, ClientService *client);
 
 void get_nodes(Query *q, ClientService *client);
+
+void fill_with_example_data(ClientService *client);

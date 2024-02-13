@@ -28,6 +28,10 @@ FileInfo parse_file_info(char *file_info) {
     };
 }
 
+bool contains_file_info_attribute(char *attribute) {
+    return strcmp(attribute, "name") == 0 || strcmp(attribute, "owner") == 0 || strcmp(attribute, "access_time") == 0 || strcmp(attribute, "mime_type") == 0;
+}
+
 void file_info_to_string(FileInfo file_info, char* buffer) {
     sprintf(buffer, "%s %s %s %s", file_info.name, file_info.owner, file_info.access_time, file_info.mime_type);
 }
