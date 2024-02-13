@@ -34,7 +34,6 @@ message NodeValue {
   }
 }
 
-// Файл будет всегда фильтроваться по имени.
 message Filter {
   enum Type {
     UNKNOWN_TYPE = 0;

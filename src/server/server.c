@@ -29,7 +29,7 @@ void handle_create_node_request(const Rpc__CreateNodeRequest *request, Rpc__Node
         .parent = node_request.parent,
         .value = node_request.value
     };
-    LOG_INFO("[handler] create node request. parent: (%d/%d)", create_node_request.parent.page_id, create_node_request.parent.item_id);
+    LOG_INFO("[handler] create node request: %s", node_request.value.string_value.value);
     Result res = document_add_node(g_document, &create_node_request, result);
     if (res.status != RES_OK) {
         LOG_ERR("[handler] failed to add node: %s", res.message);
@@ -88,7 +88,7 @@ void get_nodes_by_filter_request(const Rpc__FilterChain *request, Rpc__Nodes *re
     if (res.status != RES_OK) {
         LOG_ERR("[handler] failed to count nodes by filter: %s", res.message);
     }
-    LOG_INFO("[handler] nodes count: %d", nodes_count);
+    LOG_INFO("[handler] nodes satisfying request: %d", nodes_count);
 
     if (nodes_count == 0) {
         Rpc__Nodes tmp_result = RPC__NODES__INIT;
@@ -168,7 +168,6 @@ void prefix__get_node(Rpc__Database_Service *service, const Rpc__NodeId *input, 
 
 void prefix__get_nodes_by_filter(Rpc__Database_Service *service, const Rpc__FilterChain *input, Rpc__Nodes_Closure closure, void *closure_data) {
     (void) service;
-    LOG_INFO("[rpc__node_by_filter] Received get_node_by_filter request. Filters count: %d", input->n_filters);
     Rpc__Nodes response = RPC__NODES__INIT;
     handle_get_nodes_by_filter_request(input, &response);
     closure(&response, closure_data);

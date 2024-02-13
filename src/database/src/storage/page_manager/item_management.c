@@ -52,7 +52,7 @@ Result page_manager_put_item(PageManager *self, Page *page, ItemPayload payload,
     ItemAddResult tmp_add_result;
     Page *current_page = page;
 
-    LOG_INFO("Put item to page %d. Payload size: %d", page->page_header.page_id.id, payload.size);
+    LOG_DEBUG("Put item to page %d. Payload size: %d", page->page_header.page_id.id, payload.size);
 
     // if we don't have enough space in page then we need to allocate new page and place left data there
     while (bytes_written < payload.size) {

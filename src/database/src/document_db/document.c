@@ -53,7 +53,7 @@ void set_root_node(Document *self) {
     NodeMatcher *matcher = node_matcher_new(node_condition_parent_id_eq(ROOT_NODE_ID));
     Result res = document_take_first_node_by_condition(self, matcher, self->root_node);
     if (res.status != RES_OK) {
-        LOG_WARN("Failed to get root node: %s", res.message);
+        LOG_DEBUG("Failed to get root node: %s", res.message);
     }
     node_matcher_destroy(matcher);
 }

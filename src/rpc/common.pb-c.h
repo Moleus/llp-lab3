@@ -119,9 +119,6 @@ typedef enum {
     PROTOBUF_C__FORCE_ENUM_TO_BE_INT_SIZE(RPC__FILTER__FIELD_NAME__CASE)
 } Rpc__Filter__FieldNameCase;
 
-/*
- * Файл будет всегда фильтроваться по имени.
- */
 struct  Rpc__Filter
 {
   ProtobufCMessage base;
